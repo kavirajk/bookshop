@@ -1,4 +1,4 @@
-# CoffeShop
+# BookShop
 
 This example try to demonstrates building a "real-world" web services in go.
 
