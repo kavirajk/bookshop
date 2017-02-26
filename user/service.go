@@ -4,30 +4,43 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kavirajk/bookshop/user/email"
+	"golang.org/x/net/context"
 )
 
 var (
-	ErrUnauthorized = errors.New("Unauthorized")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrInvalidPassword = errors.New("invalid password")
+	ErrInvalidResetKey = errors.New("invalid password")
 )
 
+// Service defines all the services provided user package.
 type Service interface {
-	Register(user NewUser) (User, error)
-	Login(email, password string) (User, error)
-	EmailResetPasswordLink(email string) error
-	ResetPassword(key, oldpass, newpass string) error
-	ChangePassword(oldpass, newpass string) error
+	Register(ctx context.Context, user NewUser) (User, error)
+	Login(ctx context.Context, email, password string) (User, error)
+
+	// Used to authenticate via token
+	AuthToken(token string) (User, error)
+
+	// Used to change user's password without old password (e.g: Forget Password)
+	ResetPassword(ctx context.Context, key, newpass string) error
+
+	// Used to change user's password with old password (e.g: Profile settings)
+	ChangePassword(ctx context.Context, userID string, oldpass, newpass string) error
 }
 
+// service is a simple implementation of Service interface.
 type service struct {
 	repo Repo
 }
 
+// NewService takes User Repo and returns new User Service.
 func NewService(repo Repo) Service {
 	return service{repo: repo}
 }
 
-func (s service) Register(nuser NewUser) (User, error) {
+// Register registers the new user.
+// in case of non-nil error return User is always empty
+func (s service) Register(_ context.Context, nuser NewUser) (User, error) {
 	if err := nuser.Validate(); err != nil {
 		return User{}, fmt.Errorf("user.register: %v", err)
 	}
@@ -35,14 +48,11 @@ func (s service) Register(nuser NewUser) (User, error) {
 	if err := s.repo.Create(&user); err != nil {
 		return User{}, fmt.Errorf("user.register: %v", err)
 	}
-	ctx := map[string]interface{}{
-		"Name": user.FirstName + " " + user.LastName,
-	}
-	go email.Welcome([]string{user.Email}, ctx)
 	return user, nil
 }
 
-func (s service) Login(email, password string) (User, error) {
+// Login is used to authenticate any user with email and password.
+func (s service) Login(_ context.Context, email, password string) (User, error) {
 	user, err := s.repo.GetByEmail(email)
 	if err != nil {
 		return User{}, fmt.Errorf("user.login: %v", err)
@@ -53,8 +63,49 @@ func (s service) Login(email, password string) (User, error) {
 	return user, nil
 }
 
-func (s service) ResetPassword(oldpass, newpass string) error {
+// AuthToken is used to get user associated with token.
+func (s service) AuthToken(token string) (User, error) {
+	user, err := s.repo.GetByToken(token)
+	if err != nil {
+		return User{}, fmt.Errorf("user.auth_token: %v", err)
+	}
+	return user, nil
+}
+
+// ResetPassword is used to change the users' password with key and newPass.
+// Typical use-case would be forgot password.
+func (s service) ResetPassword(ctx context.Context, key, newPass string) error {
+	user, err := s.repo.GetByResetKey(key)
+	if err != nil {
+		return err
+	}
+	if user.ResetKey != key {
+		return ErrInvalidResetKey
+	}
+	return s.changePassword(ctx, user, newPass)
+}
+
+// ChangePassword is used to change the user's password with oldpassword.
+// Typical use-case would be to use it in profile page
+func (s service) ChangePassword(ctx context.Context, userID, oldPass, newPass string) error {
+	user, err := s.repo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+	if user.Password != calculatePassHash(oldPass, user.Salt) {
+		return ErrInvalidPassword
+	}
+	return s.changePassword(ctx, user, newPass)
+}
+
+// changePassword is an unexpoted helper function to change the password of the user.
+func (s service) changePassword(_ context.Context, user User, newPass string) error {
+	user.Password = calculatePassHash(newPass, user.Salt)
+	if err := s.repo.Save(&user); err != nil {
+		return err
+	}
 	return nil
 }
 
+// Middleware is a Service middleware for user Service
 type Middleware func(Service) Service
