@@ -23,6 +23,7 @@ type User struct {
 	Password  string `json:"-"`
 	Salt      string `json:"-"`
 	ResetKey  string `json:"-"`
+	AuthToken string `json:"-"`
 }
 
 func New() User {
@@ -58,7 +59,7 @@ func (n *NewUser) Validate() error {
 		return fmt.Errorf("newuser: %v. password", ErrMissingField)
 	}
 	if n.ConfirmPassword == "" {
-		return fmt.Errorf("newuser: %v. password", ErrMissingField)
+		return fmt.Errorf("newuser: %v. confirm_password", ErrMissingField)
 	}
 	if n.Password != n.ConfirmPassword {
 		return ErrPasswordMismatch
@@ -71,6 +72,7 @@ func (n *NewUser) User() User {
 	u.NewSalt()
 	u.FirstName = n.FirstName
 	u.LastName = n.LastName
+	u.Email = n.Email
 	u.Password = calculatePassHash(u.Password, u.Salt)
 	return u
 }

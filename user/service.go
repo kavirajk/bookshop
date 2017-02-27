@@ -26,6 +26,8 @@ type Service interface {
 
 	// Used to change user's password with old password (e.g: Profile settings)
 	ChangePassword(ctx context.Context, userID string, oldpass, newpass string) error
+
+	List(ctx context.Context) ([]User, error)
 }
 
 // service is a simple implementation of Service interface.
@@ -96,6 +98,11 @@ func (s service) ChangePassword(ctx context.Context, userID, oldPass, newPass st
 		return ErrInvalidPassword
 	}
 	return s.changePassword(ctx, user, newPass)
+}
+
+// ListUser lists all the available users in the system.
+func (s service) List(ctx context.Context) ([]User, error) {
+	return s.repo.List()
 }
 
 // changePassword is an unexpoted helper function to change the password of the user.

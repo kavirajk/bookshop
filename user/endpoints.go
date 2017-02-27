@@ -5,11 +5,32 @@ import (
 	"golang.org/x/net/context"
 )
 
+type Endpoints struct {
+	RegisterEndpoint       endpoint.Endpoint
+	LoginEndpoint          endpoint.Endpoint
+	ResetPasswordEndpoint  endpoint.Endpoint
+	ChangePasswordEndpoint endpoint.Endpoint
+	ListEndpoint           endpoint.Endpoint
+}
+
+func MakeEndpoints(s Service) Endpoints {
+	return Endpoints{
+		RegisterEndpoint:       MakeRegisterEndpoint(s),
+		LoginEndpoint:          MakeLoginEndpoint(s),
+		ResetPasswordEndpoint:  MakeResetPasswordEndpoint(s),
+		ChangePasswordEndpoint: MakeChangePasswordEndpoint(s),
+		ListEndpoint:           MakeListEndpoint(s),
+	}
+}
+
 func MakeRegisterEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(registerRequest)
 		u, e := s.Register(ctx, req.NewUser)
-		return registerResponse{User: u, Error: e}, nil
+		if e != nil {
+			return registerResponse{User: nil, Error: e.Error()}, nil
+		}
+		return registerResponse{User: &u, Error: ""}, nil
 	}
 }
 
@@ -17,7 +38,10 @@ func MakeLoginEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(loginRequest)
 		u, e := s.Login(ctx, req.Email, req.Password)
-		return loginResponse{User: u, Error: e}, nil
+		if e != nil {
+			return loginResponse{User: nil, Error: e.Error()}, nil
+		}
+		return loginResponse{User: &u, Error: ""}, nil
 	}
 }
 
@@ -31,7 +55,7 @@ func MakeResetPasswordEndpoint(s Service) endpoint.Endpoint {
 		if e != nil {
 			return resetPasswordResponse{Message: "password reset success"}, nil
 		}
-		return resetPasswordResponse{Error: e}, nil
+		return resetPasswordResponse{Error: ""}, nil
 	}
 }
 
@@ -50,9 +74,21 @@ func MakeChangePasswordEndpoint(s Service) endpoint.Endpoint {
 		}
 		e = s.ChangePassword(ctx, u.ID, req.OldPassword, req.NewPassword)
 		if e != nil {
-			return changePasswordResponse{Message: "change password success"}, nil
+			return changePasswordResponse{Error: e.Error()}, nil
 		}
-		return changePasswordResponse{Error: e}, nil
+		return changePasswordResponse{Message: "change password success"}, nil
+
+	}
+}
+
+func MakeListEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		users, e := s.List(ctx)
+		if e != nil {
+			return listResponse{Error: e.Error()}, nil
+		}
+		return listResponse{Users: users, Error: ""}, nil
+
 	}
 }
 
@@ -61,8 +97,8 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	User
-	Error error `json:"error"`
+	User  *User  `json:"user,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type loginRequest struct {
@@ -71,8 +107,8 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	User
-	Error error `json:"error"`
+	User  *User  `json:"user,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type resetPasswordRequest struct {
@@ -83,7 +119,7 @@ type resetPasswordRequest struct {
 
 type resetPasswordResponse struct {
 	Message string `json:"message,omitempty"`
-	Error   error  `json:"error"`
+	Error   string `json:"error,omitempty"`
 }
 
 type authTokenRequest struct {
@@ -100,5 +136,12 @@ type changePasswordRequest struct {
 
 type changePasswordResponse struct {
 	Message string `json:"message,omitempty"`
-	Error   error  `json:"error"`
+	Error   string `json:"error,omitempty"`
+}
+
+type listRequest struct{}
+
+type listResponse struct {
+	Users []User `json:"users"`
+	Error string `json:"error,omitempty"`
 }
