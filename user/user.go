@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,6 +36,7 @@ func New() User {
 func (u *User) NewSalt() {
 	h := sha1.New()
 	io.WriteString(h, strconv.Itoa(int(time.Now().UnixNano())))
+	u.Salt = fmt.Sprintf("%x", h.Sum(nil))
 }
 
 type NewUser struct {
@@ -73,7 +75,8 @@ func (n *NewUser) User() User {
 	u.FirstName = n.FirstName
 	u.LastName = n.LastName
 	u.Email = n.Email
-	u.Password = calculatePassHash(u.Password, u.Salt)
+	u.Password = calculatePassHash(n.Password, u.Salt)
+	u.Username = strings.Split(n.Email, "@")[0]
 	return u
 }
 
@@ -81,5 +84,5 @@ func calculatePassHash(pass, salt string) string {
 	h := sha1.New()
 	io.WriteString(h, salt)
 	io.WriteString(h, pass)
-	return fmt.Sprintf("%s", h.Sum(nil))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
