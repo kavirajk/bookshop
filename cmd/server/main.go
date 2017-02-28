@@ -18,7 +18,7 @@ func main() {
 
 	var userService user.Service
 	userService = user.NewService(repo)
-	userService = user.NewLoggingService(logger, userService)
+	userService = user.LoggingMiddleware(logger)(userService)
 
 	httpLogger := log.NewContext(logger).With("component", "http")
 	mux := http.NewServeMux()

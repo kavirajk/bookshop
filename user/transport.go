@@ -20,16 +20,11 @@ var (
 func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Handler {
 	e := MakeEndpoints(s)
 
-	opts := []httptransport.ServerOption{
-		httptransport.ServerErrorLogger(logger),
-	}
-
 	registerHandler := httptransport.NewServer(
 		ctx,
 		e.RegisterEndpoint,
 		decodeRegisterRequest,
 		encodeResponse,
-		opts...,
 	)
 	loginHandler := httptransport.NewServer(
 		ctx,
@@ -64,9 +59,18 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 	r.Handle("/users/v1/change-password", changePasswordHandler).Methods("POST")
 	r.Handle("/users/v1/list", listHandler).Methods("GET")
 
+	err := r.Walk(gorillaWalkFn)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return r
 }
-
+func gorillaWalkFn(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	path, err := route.GetPathTemplate()
+	fmt.Println(path, err)
+	return nil
+}
 func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	var r registerRequest
 	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {

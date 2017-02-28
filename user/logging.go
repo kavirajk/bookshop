@@ -12,10 +12,12 @@ type loggingService struct {
 	next   Service
 }
 
-func NewLoggingService(logger log.Logger, next Service) Service {
-	return loggingService{
-		logger: logger,
-		next:   next,
+func LoggingMiddleware(logger log.Logger) Middleware {
+	return func(next Service) Service {
+		return loggingService{
+			logger: logger,
+			next:   next,
+		}
 	}
 }
 
