@@ -65,7 +65,7 @@ func MakeChangePasswordEndpoint(s Service) endpoint.Endpoint {
 		if req.Token == "" {
 			return nil, ErrUnauthorized
 		}
-		u, e := s.AuthToken(req.Token)
+		u, e := s.AuthToken(ctx, req.Token)
 		if e != nil {
 			return nil, e
 		}

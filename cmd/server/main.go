@@ -15,11 +15,17 @@ func main() {
 	logger = log.NewLogfmtLogger(os.Stderr)
 	ctx := context.Background()
 	repo := inmem.NewUserRepo()
-	userService := user.NewService(repo)
+
+	var userService user.Service
+	userService = user.NewService(repo)
+	userService = user.NewLoggingService(logger, userService)
+
 	httpLogger := log.NewContext(logger).With("component", "http")
 	mux := http.NewServeMux()
+
 	h := user.MakeHTTPHandler(ctx, userService, httpLogger)
 	mux.Handle("/users/v1/", h)
 	http.Handle("/", mux)
+
 	http.ListenAndServe(":8080", nil)
 }

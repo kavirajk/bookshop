@@ -19,7 +19,7 @@ type Service interface {
 	Login(ctx context.Context, email, password string) (User, error)
 
 	// Used to authenticate via token
-	AuthToken(token string) (User, error)
+	AuthToken(ctx context.Context, token string) (User, error)
 
 	// Used to change user's password without old password (e.g: Forget Password)
 	ResetPassword(ctx context.Context, key, newpass string) error
@@ -66,7 +66,7 @@ func (s service) Login(_ context.Context, email, password string) (User, error) 
 }
 
 // AuthToken is used to get user associated with token.
-func (s service) AuthToken(token string) (User, error) {
+func (s service) AuthToken(_ context.Context, token string) (User, error) {
 	user, err := s.repo.GetByToken(token)
 	if err != nil {
 		return User{}, fmt.Errorf("user.auth_token: %v", err)
