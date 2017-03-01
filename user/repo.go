@@ -10,4 +10,5 @@ type Repo interface {
 	List() ([]User, error)
 	Create(user *User) error
 	Save(user *User) error
+	Drop() error
 }

@@ -1,17 +1,12 @@
 package inmem
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/kavirajk/bookshop/db"
 	"github.com/kavirajk/bookshop/user"
 	"github.com/twinj/uuid"
-)
-
-var (
-	ErrNotFound      = errors.New("not found")
-	ErrAlreadyExists = errors.New("entity already exists")
 )
 
 type userRepo map[string]user.User
@@ -26,7 +21,7 @@ var global userID
 func (r userRepo) GetByID(ID string) (user.User, error) {
 	u, ok := r[ID]
 	if !ok {
-		return user.User{}, fmt.Errorf("user %v", ErrNotFound)
+		return user.User{}, fmt.Errorf("user %v", db.ErrNotFound)
 	}
 	return u, nil
 }
@@ -37,7 +32,7 @@ func (r userRepo) GetByUserName(username string) (user.User, error) {
 			return v, nil
 		}
 	}
-	return user.User{}, fmt.Errorf("user %v", ErrNotFound)
+	return user.User{}, fmt.Errorf("user %v", db.ErrNotFound)
 }
 
 func (r userRepo) GetByEmail(email string) (user.User, error) {
@@ -46,7 +41,7 @@ func (r userRepo) GetByEmail(email string) (user.User, error) {
 			return v, nil
 		}
 	}
-	return user.User{}, fmt.Errorf("user %v", ErrNotFound)
+	return user.User{}, fmt.Errorf("user %v", db.ErrNotFound)
 }
 
 func (r userRepo) GetByToken(token string) (user.User, error) {
@@ -55,7 +50,7 @@ func (r userRepo) GetByToken(token string) (user.User, error) {
 			return v, nil
 		}
 	}
-	return user.User{}, fmt.Errorf("user %v", ErrNotFound)
+	return user.User{}, fmt.Errorf("user %v", db.ErrNotFound)
 }
 
 func (r userRepo) GetByResetKey(key string) (user.User, error) {
@@ -64,7 +59,7 @@ func (r userRepo) GetByResetKey(key string) (user.User, error) {
 			return v, nil
 		}
 	}
-	return user.User{}, fmt.Errorf("user %v", ErrNotFound)
+	return user.User{}, fmt.Errorf("user %v", db.ErrNotFound)
 }
 
 func (r userRepo) List() ([]user.User, error) {
@@ -82,7 +77,7 @@ func (r userRepo) Create(user *user.User) error {
 	global.Unlock()
 
 	if _, ok := r[user.ID]; ok {
-		return ErrAlreadyExists
+		return db.ErrAlreadyExists
 	}
 	r[user.ID] = *user
 	return nil
@@ -90,6 +85,13 @@ func (r userRepo) Create(user *user.User) error {
 
 func (r userRepo) Save(user *user.User) error {
 	r[user.ID] = *user
+	return nil
+}
+
+func (r userRepo) Drop() error {
+	for k := range r {
+		delete(r, k)
+	}
 	return nil
 }
 

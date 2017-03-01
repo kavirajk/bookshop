@@ -1,31 +1,35 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 
-	"github.com/go-kit/kit/log"
-	"github.com/kavirajk/bookshop/db/inmem"
+	kitlog "github.com/go-kit/kit/log"
+	"github.com/kavirajk/bookshop/db/postgres"
 	"github.com/kavirajk/bookshop/user"
 	"golang.org/x/net/context"
 )
 
 func main() {
-	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
+	var logger kitlog.Logger
+	logger = kitlog.NewLogfmtLogger(os.Stderr)
 	ctx := context.Background()
-	repo := inmem.NewUserRepo()
+	repo, err := postgres.NewUserRepo("user=kaviraj password=kaviraj dbname=bookstore sslmode=disable")
+	if err != nil {
+		log.Fatalf("error creating user repo: %v\n", err)
+	}
 
 	var userService user.Service
 	userService = user.NewService(repo)
 	userService = user.LoggingMiddleware(logger)(userService)
 
-	httpLogger := log.NewContext(logger).With("component", "http")
+	httpLogger := kitlog.NewContext(logger).With("component", "http")
 	mux := http.NewServeMux()
 
 	h := user.MakeHTTPHandler(ctx, userService, httpLogger)
 	mux.Handle("/users/v1/", h)
 	http.Handle("/", mux)
 
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
