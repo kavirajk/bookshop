@@ -2,12 +2,13 @@ package user
 
 import (
 	"crypto/sha1"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -49,19 +50,19 @@ type NewUser struct {
 
 func (n *NewUser) Validate() error {
 	if n.FirstName == "" {
-		return fmt.Errorf("newuser: %v. firstname", ErrMissingField)
+		return errors.Wrap(ErrMissingField, ": first_name")
 	}
 	if n.LastName == "" {
-		return fmt.Errorf("newuser: %v. lastname", ErrMissingField)
+		return errors.Wrap(ErrMissingField, ": last_name")
 	}
 	if n.Email == "" {
-		return fmt.Errorf("newuser: %v. email", ErrMissingField)
+		return errors.Wrap(ErrMissingField, ": email")
 	}
 	if n.Password == "" {
-		return fmt.Errorf("newuser: %v. password", ErrMissingField)
+		return errors.Wrap(ErrMissingField, ": password")
 	}
 	if n.ConfirmPassword == "" {
-		return fmt.Errorf("newuser: %v. confirm_password", ErrMissingField)
+		return errors.Wrap(ErrMissingField, ": confirm_password")
 	}
 	if n.Password != n.ConfirmPassword {
 		return ErrPasswordMismatch

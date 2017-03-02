@@ -2,15 +2,16 @@ package user
 
 import (
 	"errors"
-	"fmt"
 
 	"golang.org/x/net/context"
 )
 
 var (
-	ErrUnauthorized    = errors.New("unauthorized")
-	ErrInvalidPassword = errors.New("invalid password")
-	ErrInvalidResetKey = errors.New("invalid password")
+	ErrUnauthorized       = errors.New("unauthorized")
+	ErrInvalidPassword    = errors.New("invalid password")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidResetKey    = errors.New("invalid resetkey")
+	ErrUserNotFound       = errors.New("user not found")
 )
 
 // Service defines all the services provided user package.
@@ -44,11 +45,11 @@ func NewService(repo Repo) Service {
 // in case of non-nil error return User is always empty
 func (s service) Register(_ context.Context, nuser NewUser) (User, error) {
 	if err := nuser.Validate(); err != nil {
-		return User{}, fmt.Errorf("user.register: %v", err)
+		return User{}, err
 	}
 	user := nuser.User()
 	if err := s.repo.Create(&user); err != nil {
-		return User{}, fmt.Errorf("user.register: %v", err)
+		return User{}, err
 	}
 	return user, nil
 }
@@ -57,10 +58,10 @@ func (s service) Register(_ context.Context, nuser NewUser) (User, error) {
 func (s service) Login(_ context.Context, email, password string) (User, error) {
 	user, err := s.repo.GetByEmail(email)
 	if err != nil {
-		return User{}, fmt.Errorf("user.login: %v", err)
+		return User{}, err
 	}
 	if user.Password != calculatePassHash(password, user.Salt) {
-		return New(), fmt.Errorf("user.login: %v", ErrUnauthorized)
+		return User{}, ErrUnauthorized
 	}
 	return user, nil
 }
@@ -69,7 +70,7 @@ func (s service) Login(_ context.Context, email, password string) (User, error) 
 func (s service) AuthToken(_ context.Context, token string) (User, error) {
 	user, err := s.repo.GetByToken(token)
 	if err != nil {
-		return User{}, fmt.Errorf("user.auth_token: %v", err)
+		return User{}, err
 	}
 	return user, nil
 }
