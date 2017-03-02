@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +14,21 @@ import (
 )
 
 func main() {
+	var (
+		dbSource = flag.String("db", "", "Database source to connect to.")
+	)
+	flag.Parse()
+
 	var logger kitlog.Logger
 	logger = kitlog.NewLogfmtLogger(os.Stderr)
 	ctx := context.Background()
-	repo, err := postgres.NewUserRepo("user=kaviraj password=kaviraj dbname=bookstore sslmode=disable")
+
+	if *dbSource == "" {
+		fmt.Println("db argument is missing. Type --help for more info")
+		os.Exit(1)
+	}
+
+	repo, err := postgres.NewUserRepo(*dbSource)
 	if err != nil {
 		log.Fatalf("error creating user repo: %v\n", err)
 	}

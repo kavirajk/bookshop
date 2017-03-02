@@ -16,6 +16,7 @@ var (
 	ErrPasswordMismatch = errors.New("passwords didn't match")
 )
 
+// User represents domain model of user service.
 type User struct {
 	ID        string `json:"id" sql:"primary_key"`
 	FirstName string `json:"first_name"`
@@ -28,18 +29,22 @@ type User struct {
 	AuthToken string `json:"-"`
 }
 
+// New create empty user with random salt.
 func New() User {
 	u := User{}
 	u.NewSalt()
 	return u
 }
 
+// NewSalt creates random salt value based on current time.
+// usefull to hash password in a secure way.
 func (u *User) NewSalt() {
 	h := sha1.New()
 	io.WriteString(h, strconv.Itoa(int(time.Now().UnixNano())))
 	u.Salt = fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// NewUser represents user who is about to register.
 type NewUser struct {
 	FirstName       string `json:"first_name"`
 	LastName        string `json:"last_name"`
@@ -48,6 +53,7 @@ type NewUser struct {
 	ConfirmPassword string `json:"confirm_password"`
 }
 
+// Validate does basic validation before saving into db.
 func (n *NewUser) Validate() error {
 	if n.FirstName == "" {
 		return errors.Wrap(ErrMissingField, ": first_name")
@@ -70,6 +76,7 @@ func (n *NewUser) Validate() error {
 	return nil
 }
 
+// User map NewUser with domain User.
 func (n *NewUser) User() User {
 	u := New()
 	u.NewSalt()

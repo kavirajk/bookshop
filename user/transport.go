@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -10,11 +9,7 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
-)
-
-var (
-	jsonEncodingError = "json encoding error %v"
-	jsonDecodingError = "json decoding error %v"
+	"github.com/pkg/errors"
 )
 
 func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Handler {
@@ -63,44 +58,67 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 }
 func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	var r registerRequest
-	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {
-		return nil, fmt.Errorf(jsonDecodingError, err)
-	}
-	return r, nil
+	err := json.NewDecoder(req.Body).Decode(&r)
+	return r, err
 }
 
 func decodeLoginRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	var r loginRequest
-	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {
-		return nil, fmt.Errorf(jsonDecodingError, err)
-	}
-	return r, nil
+	err := json.NewDecoder(req.Body).Decode(&r)
+	return r, err
 }
 
 func decodeResetPasswordRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	var r resetPasswordRequest
-	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {
-		return nil, fmt.Errorf(jsonDecodingError, err)
-	}
-	return r, nil
+	err := json.NewDecoder(req.Body).Decode(&r)
+	return r, err
 }
 
 func decodeChangePasswordRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	var r resetPasswordRequest
-	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {
-		return nil, fmt.Errorf(jsonDecodingError, err)
-	}
-	return r, nil
+	err := json.NewDecoder(req.Body).Decode(&r)
+	return r, err
 }
 
 func decodeListRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	return listRequest{}, nil
 }
 
+type errorer interface {
+	error() error
+}
+
 func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) error {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if err := json.NewEncoder(w).Encode(d); err != nil {
-		return fmt.Errorf(jsonEncodingError, err)
+	if e, ok := d.(errorer); ok && e.error() != nil {
+		// Now its a business logic error
+		// Extract base domain error
+		encodeError(ctx, errors.Cause(e.error()), w)
+		return nil
 	}
-	return nil
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	return json.NewEncoder(w).Encode(d)
+}
+
+func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	if err == nil {
+		panic("encodeError with nil error")
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(codeFrom(err))
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": err.Error(),
+	})
+}
+
+func codeFrom(err error) int {
+	switch err {
+	case ErrUserNotFound:
+		return http.StatusNotFound
+	case ErrUnauthorized:
+		return http.StatusUnauthorized
+	case ErrInvalidPassword, ErrInvalidResetKey, ErrMissingField, ErrPasswordMismatch:
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }

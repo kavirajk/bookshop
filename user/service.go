@@ -7,11 +7,10 @@ import (
 )
 
 var (
-	ErrUnauthorized       = errors.New("unauthorized")
-	ErrInvalidPassword    = errors.New("invalid password")
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrInvalidResetKey    = errors.New("invalid resetkey")
-	ErrUserNotFound       = errors.New("user not found")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrInvalidPassword = errors.New("invalid password")
+	ErrInvalidResetKey = errors.New("invalid resetkey")
+	ErrUserNotFound    = errors.New("user not found")
 )
 
 // Service defines all the services provided user package.

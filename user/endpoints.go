@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Endpoints combine all the user service endpoints under single type.
 type Endpoints struct {
 	RegisterEndpoint       endpoint.Endpoint
 	LoginEndpoint          endpoint.Endpoint
@@ -13,6 +14,8 @@ type Endpoints struct {
 	ListEndpoint           endpoint.Endpoint
 }
 
+// MakeEndpoints returns Endpoints type which is the combination of
+// all the user service endpoints.
 func MakeEndpoints(s Service) Endpoints {
 	return Endpoints{
 		RegisterEndpoint:       MakeRegisterEndpoint(s),
