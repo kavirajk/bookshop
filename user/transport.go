@@ -95,6 +95,10 @@ type errorer interface {
 	error() error
 }
 
+type statuser interface {
+	status() int
+}
+
 // formatResponse is the uniform response format used throughout the users service,
 // for every endpoint response.
 type formatResponse struct {
@@ -119,9 +123,15 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) e
 		return nil
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	status := http.StatusOK
+	if s, ok := d.(statuser); ok && s.status() != 0 {
+		status = s.status()
+	}
+
 	f := formatResponse{
 		Data: d,
-		Meta: metaResponse{Status: http.StatusOK},
+		Meta: metaResponse{Status: status},
 	}
 	return json.NewEncoder(w).Encode(f)
 }

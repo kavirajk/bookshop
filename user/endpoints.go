@@ -1,6 +1,8 @@
 package user
 
 import (
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	"golang.org/x/net/context"
 )
@@ -33,7 +35,7 @@ func MakeRegisterEndpoint(s Service) endpoint.Endpoint {
 		if e != nil {
 			return registerResponse{User: nil, Error: e}, nil
 		}
-		return registerResponse{User: &u}, nil
+		return registerResponse{User: &u, Status: http.StatusCreated}, nil
 	}
 }
 
@@ -101,8 +103,13 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	User  *User `json:"user,omitempty"`
-	Error error `json:"error,omitempty"`
+	Status int   `json:"-"`
+	User   *User `json:"user,omitempty"`
+	Error  error `json:"error,omitempty"`
+}
+
+func (r registerResponse) status() int {
+	return r.Status
 }
 
 func (r registerResponse) error() error {
@@ -115,8 +122,13 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	User  *User `json:"user,omitempty"`
-	Error error `json:"error,omitempty"`
+	Status int   `json:"-"`
+	User   *User `json:"user,omitempty"`
+	Error  error `json:"error,omitempty"`
+}
+
+func (l loginResponse) status() int {
+	return l.Status
 }
 
 func (r loginResponse) error() error {
@@ -130,8 +142,13 @@ type resetPasswordRequest struct {
 }
 
 type resetPasswordResponse struct {
+	Status  int    `json:"-"`
 	Message string `json:"message,omitempty"`
 	Error   error  `json:"error,omitempty"`
+}
+
+func (r resetPasswordResponse) status() int {
+	return r.Status
 }
 
 func (r resetPasswordResponse) error() error {
@@ -151,8 +168,13 @@ type changePasswordRequest struct {
 }
 
 type changePasswordResponse struct {
+	Status  int    `json:"-"`
 	Message string `json:"message,omitempty"`
 	Error   error  `json:"error,omitempty"`
+}
+
+func (c changePasswordResponse) status() int {
+	return c.Status
 }
 
 func (r changePasswordResponse) error() error {
@@ -166,10 +188,15 @@ type listRequest struct {
 }
 
 type listResponse struct {
-	Users []User `json:"users"`
-	Error error  `json:"error,omitempty"`
+	Status int    `json:"-"`
+	Users  []User `json:"users"`
+	Error  error  `json:"error,omitempty"`
 }
 
-func (r *listResponse) error() error {
+func (r listResponse) status() int {
+	return r.Status
+}
+
+func (r listResponse) error() error {
 	return r.Error
 }
