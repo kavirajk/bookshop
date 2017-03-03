@@ -14,36 +14,43 @@ import (
 
 func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Handler {
 	e := MakeEndpoints(s)
-
+	options := []httptransport.ServerOption{
+		httptransport.ServerErrorEncoder(encodeError),
+	}
 	registerHandler := httptransport.NewServer(
 		ctx,
 		e.RegisterEndpoint,
 		decodeRegisterRequest,
 		encodeResponse,
+		options...,
 	)
 	loginHandler := httptransport.NewServer(
 		ctx,
 		e.LoginEndpoint,
 		decodeLoginRequest,
 		encodeResponse,
+		options...,
 	)
 	resetPasswordHandler := httptransport.NewServer(
 		ctx,
 		e.ResetPasswordEndpoint,
 		decodeResetPasswordRequest,
 		encodeResponse,
+		options...,
 	)
 	changePasswordHandler := httptransport.NewServer(
 		ctx,
 		e.ChangePasswordEndpoint,
 		decodeChangePasswordRequest,
 		encodeResponse,
+		options...,
 	)
 	listHandler := httptransport.NewServer(
 		ctx,
 		e.ListEndpoint,
 		decodeListRequest,
 		encodeResponse,
+		options...,
 	)
 
 	r := mux.NewRouter()
@@ -88,15 +95,35 @@ type errorer interface {
 	error() error
 }
 
+// formatResponse is the uniform response format used throughout the users service,
+// for every endpoint response.
+type formatResponse struct {
+	Data interface{}  `json:"data,omitempty"`
+	Meta metaResponse `json:"meta"`
+}
+
+// metaResponse is part of response json that tells about basic meta information.
+type metaResponse struct {
+	Status   int    `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Previous string `json:"previous,omitempty"`
+	Next     string `json:"next,omitempty"`
+	Total    int    `json:"total,omitempty"`
+}
+
 func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) error {
 	if e, ok := d.(errorer); ok && e.error() != nil {
-		// Now its a business logic error
-		// Extract base domain error
-		encodeError(ctx, errors.Cause(e.error()), w)
+		// Now its a business logic error.
+		// Extract base domain error.
+		encodeError(ctx, e.error(), w)
 		return nil
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(d)
+	f := formatResponse{
+		Data: d,
+		Meta: metaResponse{Status: http.StatusOK},
+	}
+	return json.NewEncoder(w).Encode(f)
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
@@ -104,10 +131,12 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		panic("encodeError with nil error")
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(codeFrom(err))
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
-	})
+	// Its important to pass errors.Cause() as we decide status code based on
+	// root error which is domain specific
+	code := codeFrom(errors.Cause(err))
+	w.WriteHeader(code)
+	f := formatResponse{Meta: metaResponse{Status: code, Error: err.Error()}}
+	json.NewEncoder(w).Encode(f)
 }
 
 func codeFrom(err error) int {
