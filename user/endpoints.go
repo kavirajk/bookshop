@@ -105,7 +105,7 @@ type registerResponse struct {
 	Error error `json:"error,omitempty"`
 }
 
-func (r *registerResponse) error() error {
+func (r registerResponse) error() error {
 	return r.Error
 }
 
@@ -119,7 +119,7 @@ type loginResponse struct {
 	Error error `json:"error,omitempty"`
 }
 
-func (r *loginResponse) error() error {
+func (r loginResponse) error() error {
 	return r.Error
 }
 
@@ -134,7 +134,7 @@ type resetPasswordResponse struct {
 	Error   error  `json:"error,omitempty"`
 }
 
-func (r *resetPasswordResponse) error() error {
+func (r resetPasswordResponse) error() error {
 	return r.Error
 }
 
@@ -155,7 +155,7 @@ type changePasswordResponse struct {
 	Error   error  `json:"error,omitempty"`
 }
 
-func (r *changePasswordResponse) error() error {
+func (r changePasswordResponse) error() error {
 	return r.Error
 }
 
