@@ -101,18 +101,26 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	User  *User  `json:"user,omitempty"`
-	Error string `json:"error,omitempty"`
+	User  *User `json:"user,omitempty"`
+	Error error `json:"error,omitempty"`
+}
+
+func (r *registerResponse) error() error {
+	return r.Error
 }
 
 type loginRequest struct {
 	Email    string `json:"email"`
-	Password string `json:"password"`
+	Password error  `json:"password"`
 }
 
 type loginResponse struct {
-	User  *User  `json:"user,omitempty"`
-	Error string `json:"error,omitempty"`
+	User  *User `json:"user,omitempty"`
+	Error error `json:"error,omitempty"`
+}
+
+func (r *loginResponse) error() error {
+	return r.Error
 }
 
 type resetPasswordRequest struct {
@@ -123,7 +131,11 @@ type resetPasswordRequest struct {
 
 type resetPasswordResponse struct {
 	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Error   error  `json:"error,omitempty"`
+}
+
+func (r *resetPasswordResponse) error() error {
+	return r.Error
 }
 
 type authTokenRequest struct {
@@ -140,7 +152,11 @@ type changePasswordRequest struct {
 
 type changePasswordResponse struct {
 	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Error   error  `json:"error,omitempty"`
+}
+
+func (r *changePasswordResponse) error() error {
+	return r.Error
 }
 
 type listRequest struct {
@@ -151,5 +167,9 @@ type listRequest struct {
 
 type listResponse struct {
 	Users []User `json:"users"`
-	Error string `json:"error,omitempty"`
+	Error error  `json:"error,omitempty"`
+}
+
+func (r *listResponse) error() error {
+	return r.Error
 }
