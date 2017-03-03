@@ -31,9 +31,9 @@ func MakeRegisterEndpoint(s Service) endpoint.Endpoint {
 		req := request.(registerRequest)
 		u, e := s.Register(ctx, req.NewUser)
 		if e != nil {
-			return registerResponse{User: nil, Error: e.Error()}, nil
+			return registerResponse{User: nil, Error: e}, nil
 		}
-		return registerResponse{User: &u, Error: ""}, nil
+		return registerResponse{User: &u}, nil
 	}
 }
 
@@ -42,9 +42,9 @@ func MakeLoginEndpoint(s Service) endpoint.Endpoint {
 		req := request.(loginRequest)
 		u, e := s.Login(ctx, req.Email, req.Password)
 		if e != nil {
-			return loginResponse{User: nil, Error: e.Error()}, nil
+			return loginResponse{User: nil, Error: e}, nil
 		}
-		return loginResponse{User: &u, Error: ""}, nil
+		return loginResponse{User: &u}, nil
 	}
 }
 
@@ -56,9 +56,9 @@ func MakeResetPasswordEndpoint(s Service) endpoint.Endpoint {
 		}
 		e := s.ResetPassword(ctx, req.Key, req.NewPassword)
 		if e != nil {
-			return resetPasswordResponse{Message: "password reset success"}, nil
+			return resetPasswordResponse{Error: e}, nil
 		}
-		return resetPasswordResponse{Error: ""}, nil
+		return resetPasswordResponse{Message: "password reset success"}, nil
 	}
 }
 
@@ -77,7 +77,7 @@ func MakeChangePasswordEndpoint(s Service) endpoint.Endpoint {
 		}
 		e = s.ChangePassword(ctx, u.ID, req.OldPassword, req.NewPassword)
 		if e != nil {
-			return changePasswordResponse{Error: e.Error()}, nil
+			return changePasswordResponse{Error: e}, nil
 		}
 		return changePasswordResponse{Message: "change password success"}, nil
 
@@ -89,9 +89,9 @@ func MakeListEndpoint(s Service) endpoint.Endpoint {
 		req := request.(listRequest)
 		users, _, e := s.List(ctx, req.Order, req.Limit, req.Offset)
 		if e != nil {
-			return listResponse{Error: e.Error()}, nil
+			return listResponse{Error: e}, nil
 		}
-		return listResponse{Users: users, Error: ""}, nil
+		return listResponse{Users: users}, nil
 
 	}
 }
@@ -111,7 +111,7 @@ func (r *registerResponse) error() error {
 
 type loginRequest struct {
 	Email    string `json:"email"`
-	Password error  `json:"password"`
+	Password string `json:"password"`
 }
 
 type loginResponse struct {
