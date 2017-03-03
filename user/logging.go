@@ -77,7 +77,7 @@ func (s loggingService) ChangePassword(ctx context.Context, userID string, oldpa
 	return s.next.ChangePassword(ctx, userID, oldpass, newpass)
 }
 
-func (s loggingService) List(ctx context.Context) (users []User, err error) {
+func (s loggingService) List(ctx context.Context, order string, limit, offset int) (users []User, total int, err error) {
 	defer func(begin time.Time) {
 		s.logger.Log(
 			"method", "list",
@@ -86,5 +86,5 @@ func (s loggingService) List(ctx context.Context) (users []User, err error) {
 		)
 	}(time.Now())
 
-	return s.next.List(ctx)
+	return s.next.List(ctx, order, limit, offset)
 }

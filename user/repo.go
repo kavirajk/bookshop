@@ -7,7 +7,7 @@ type Repo interface {
 	GetByEmail(email string) (User, error)
 	GetByToken(token string) (User, error)
 	GetByResetKey(email string) (User, error)
-	List() ([]User, error)
+	List(order string, limit, offset int) (users []User, total int, err error)
 	Create(user *User) error
 	Save(user *User) error
 	Drop() error

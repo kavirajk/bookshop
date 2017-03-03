@@ -119,3 +119,62 @@ func TestGetByToken(t *testing.T) {
 		}
 	})
 }
+
+func TestList(t *testing.T) {
+	repo := setup(t)
+	defer repo.Drop()
+	users := []user.User{
+		{Email: "test1@bookshop.com", Username: "test1"},
+		{Email: "test2@bookshop.com", Username: "test2"},
+		{Email: "test3@bookshop.com", Username: "test3"},
+		{Email: "test4@bookshop.com", Username: "test4"},
+	}
+	for i := range users {
+		if err := repo.Create(&users[i]); err != nil {
+			t.Errorf("expected nil error, got %v\n", err)
+		}
+	}
+
+	t.Run("test limit", func(t *testing.T) {
+		us, total, err := repo.List("", 2, 0)
+		if err != nil {
+			t.Errorf("expected nil error, got %v\n", err)
+		}
+		if total != 4 {
+			t.Errorf("expected total 4, got %v\n", total)
+		}
+		if len(us) != 2 {
+			t.Errorf("expected return length 2, got %v\n", len(us))
+		}
+	})
+	t.Run("test offset", func(t *testing.T) {
+		us, total, err := repo.List("", 5, 1) // starting from offset 1
+
+		if err != nil {
+			t.Errorf("expected nil error, got %v\n", err)
+		}
+		if total != 4 {
+			t.Errorf("expected total 4, got %v\n", total)
+		}
+		if len(us) != 3 {
+			t.Errorf("expected return length 3, got %v\n", len(us))
+		}
+	})
+	t.Run("test ordering", func(t *testing.T) {
+		us, _, err := repo.List("username", 3, 0)
+
+		if err != nil {
+			t.Errorf("expected nil error, got %v\n", err)
+		}
+
+		if us[0].Username != "test1" {
+			t.Errorf("ordering failed. expected test1, got %v\n", us[0].Username)
+		}
+		us, _, err = repo.List("username desc", 3, 0)
+		if us[0].Username != "test4" {
+			t.Errorf("ordering failed. expected test1, got %v\n", us[0].Username)
+		}
+
+	})
+
+}

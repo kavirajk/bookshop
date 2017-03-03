@@ -86,7 +86,8 @@ func MakeChangePasswordEndpoint(s Service) endpoint.Endpoint {
 
 func MakeListEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		users, e := s.List(ctx)
+		req := request.(listRequest)
+		users, _, e := s.List(ctx, req.Order, req.Limit, req.Offset)
 		if e != nil {
 			return listResponse{Error: e.Error()}, nil
 		}
@@ -142,7 +143,11 @@ type changePasswordResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-type listRequest struct{}
+type listRequest struct {
+	Order  string `json:"order"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+}
 
 type listResponse struct {
 	Users []User `json:"users"`

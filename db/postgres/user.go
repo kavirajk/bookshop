@@ -57,12 +57,17 @@ func (r *userRepo) GetByResetKey(key string) (user.User, error) {
 	return r.get("reset_key=?", key)
 }
 
-func (r *userRepo) List() ([]user.User, error) {
+func (r *userRepo) List(order string, limit, offset int) ([]user.User, int, error) {
 	users := make([]user.User, 0)
 	db := r.db.New()
 
-	err := db.Find(&users).Error
-	return users, err
+	var total int
+	if err := db.Model(&user.User{}).Order(order).Count(&total).Error; err != nil {
+		return users, 0, err
+	}
+
+	err := db.Order(order).Limit(limit).Offset(offset).Find(&users).Error
+	return users, total, err
 }
 
 func (r *userRepo) Create(u *user.User) error {
