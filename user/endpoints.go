@@ -2,6 +2,7 @@ package user
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/go-kit/kit/endpoint"
 	"golang.org/x/net/context"
@@ -89,11 +90,28 @@ func MakeChangePasswordEndpoint(s Service) endpoint.Endpoint {
 func MakeListEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listRequest)
-		users, _, e := s.List(ctx, req.Order, req.Limit, req.Offset)
+		var next, prev string
+		users, total, e := s.List(ctx, req.Order, req.Limit, req.Offset)
 		if e != nil {
 			return listResponse{Error: e}, nil
 		}
-		return listResponse{Users: users}, nil
+		limit, offset, err := nextLimitOffset(total, req.Limit, req.Offset)
+		if err == nil {
+			params := req.URL.Query()
+			params = appendLimitOffset(params, limit, offset)
+			next = req.URL.Host + req.URL.Path + "?" + params.Encode()
+		}
+		limit, offset, err = prevLimitOffset(total, req.Limit, req.Offset)
+		if err == nil {
+			params := req.URL.Query()
+			params = appendLimitOffset(params, limit, offset)
+			prev = req.URL.Host + req.URL.Path + "?" + params.Encode()
+		}
+
+		return listResponse{
+			Users: users, Total: total,
+			Prev: prev, Next: next,
+		}, nil
 
 	}
 }
@@ -185,12 +203,18 @@ type listRequest struct {
 	Order  string `json:"order"`
 	Limit  int    `json:"limit"`
 	Offset int    `json:"offset"`
+
+	URL *url.URL `json:"-"`
 }
 
 type listResponse struct {
 	Status int    `json:"-"`
 	Users  []User `json:"users"`
 	Error  error  `json:"error,omitempty"`
+
+	Total int    `json:"-"`
+	Prev  string `json:"-"`
+	Next  string `json:"-"`
 }
 
 func (r listResponse) status() int {
@@ -199,4 +223,8 @@ func (r listResponse) status() int {
 
 func (r listResponse) error() error {
 	return r.Error
+}
+
+func (r listResponse) page() (int, string, string) {
+	return r.Total, r.Prev, r.Next
 }

@@ -3,6 +3,8 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"golang.org/x/net/context"
 
@@ -10,6 +12,15 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+)
+
+var (
+	ErrNoNextPage = errors.New("no next page")
+	ErrNoPrevPage = errors.New("no prev page")
+)
+
+const (
+	defaultPageLimit = 20
 )
 
 func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Handler {
@@ -88,7 +99,25 @@ func decodeChangePasswordRequest(ctx context.Context, req *http.Request) (interf
 }
 
 func decodeListRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	return listRequest{}, nil
+	lreq := listRequest{}
+	lreq.Order = req.FormValue("order")
+
+	// Ignoring errors since zero values makes sense for limit and offset
+	lreq.Limit, _ = strconv.Atoi(req.FormValue("limit"))
+	if lreq.Limit == 0 {
+		lreq.Limit = defaultPageLimit
+	}
+	lreq.Offset, _ = strconv.Atoi(req.FormValue("offset"))
+
+	url := req.URL
+	url.Scheme = "http" // TODO(kaviraj): fix it by removing this hardcode values
+	if url.Host == "" {
+		url.Host = "localhost:8080"
+	}
+
+	lreq.URL = url
+
+	return lreq, nil
 }
 
 type errorer interface {
@@ -97,6 +126,10 @@ type errorer interface {
 
 type statuser interface {
 	status() int
+}
+
+type pager interface {
+	page() (total int, previous, next string)
 }
 
 // formatResponse is the uniform response format used throughout the users service,
@@ -133,6 +166,14 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) e
 		Data: d,
 		Meta: metaResponse{Status: status},
 	}
+
+	if page, ok := d.(pager); ok {
+		t, p, n := page.page()
+		f.Meta.Total = t
+		f.Meta.Previous = p
+		f.Meta.Next = n
+	}
+
 	return json.NewEncoder(w).Encode(f)
 }
 
@@ -160,4 +201,34 @@ func codeFrom(err error) int {
 	default:
 		return http.StatusInternalServerError
 	}
+}
+
+func nextLimitOffset(total, currentLimit, currentOffset int) (limit, offset int, err error) {
+	if currentLimit+currentOffset <= total {
+		// there exists next page
+		return currentLimit, currentOffset + currentLimit, nil
+	}
+	return 0, 0, ErrNoNextPage
+}
+
+func prevLimitOffset(total, currentLimit, currentOffset int) (limit, offset int, err error) {
+	if total > 0 && currentOffset > 0 {
+		limit = currentLimit
+
+		// there exists prev page
+		if currentOffset-currentLimit <= 0 {
+			offset = 0
+		} else {
+			offset = currentOffset - currentLimit
+		}
+
+		return
+	}
+	return 0, 0, ErrNoNextPage
+}
+
+func appendLimitOffset(values url.Values, limit, offset int) url.Values {
+	values.Set("limit", strconv.Itoa(limit))
+	values.Set("offset", strconv.Itoa(offset))
+	return values
 }
