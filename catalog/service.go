@@ -1,8 +1,10 @@
 package catalog
 
+import "golang.org/x/net/context"
+
 type Service interface {
-	List(tags []string, order string, pageNum, pageSize int) ([]Album, error)
-	Search(tag string) ([]Album, error)
-	Get(id string) (Album, error)
-	Count(tags []string) (int, error)
+	List(ctx context.Context, tags []string, order string, limit, offset int) ([]Book, error)
+	Search(ctx context.Context, tag string) ([]Book, error)
+	Get(ctx context.Context, id string) (Book, error)
+	Count(ctx context.Context, tags []string) (int, error)
 }
