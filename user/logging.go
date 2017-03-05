@@ -3,8 +3,8 @@ package user
 import (
 	"time"
 
+	"context"
 	"github.com/go-kit/kit/log"
-	"golang.org/x/net/context"
 )
 
 type loggingService struct {

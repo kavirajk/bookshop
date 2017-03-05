@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"context"
 	"github.com/go-kit/kit/endpoint"
-	"golang.org/x/net/context"
 )
 
 // Endpoints combine all the user service endpoints under single type.

@@ -1,6 +1,6 @@
 package order
 
-import "golang.org/x/net/context"
+import "context"
 
 type Service interface {
 	PlaceOrder(ctx context.Context, bookID string) (Order, error)

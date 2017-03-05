@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"

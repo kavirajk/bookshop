@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"context"
 	"github.com/go-kit/kit/metrics"
-	"golang.org/x/net/context"
 )
 
 type instrmw struct {

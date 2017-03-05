@@ -11,10 +11,10 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 
+	"context"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/kavirajk/bookshop/db/postgres"
 	"github.com/kavirajk/bookshop/user"
-	"golang.org/x/net/context"
 )
 
 func main() {

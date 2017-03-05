@@ -3,7 +3,7 @@ package user
 import (
 	"errors"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 var (

@@ -1,6 +1,6 @@
 package catalog
 
-import "golang.org/x/net/context"
+import "context"
 
 type Service interface {
 	List(ctx context.Context, tags []string, order string, limit, offset int) ([]Book, error)
