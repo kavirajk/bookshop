@@ -3,8 +3,6 @@ package book
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 
 	"context"
@@ -12,17 +10,12 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	"github.com/kavirajk/bookshop/transport"
 	"github.com/pkg/errors"
 )
 
 var (
 	ErrEmptyQuery = errors.New("empty query")
-	ErrNoNextPage = errors.New("no next page")
-	ErrNoPrevPage = errors.New("no prev page")
-)
-
-const (
-	defaultPageLimit = 20
 )
 
 func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Handler {
@@ -72,32 +65,21 @@ func decodeGetRequest(ctx context.Context, req *http.Request) (interface{}, erro
 	}
 }
 
+// errorer interface should be implemented by all the doman specific errors.
+// easy to set different status code in case of different errors.
 type errorer interface {
 	error() error
 }
 
+// statuser allows any response to get customer status code
+// e.g: 201 for successfull resource creation.
 type statuser interface {
 	status() int
 }
 
+// pager used to paginate any transport response.
 type pager interface {
 	page() (total int, previous, next string)
-}
-
-// formatResponse is the uniform response format used throughout the books service,
-// for every endpoint response.
-type formatResponse struct {
-	Data interface{}  `json:"data,omitempty"`
-	Meta metaResponse `json:"meta"`
-}
-
-// metaResponse is part of response json that tells about basic meta information.
-type metaResponse struct {
-	Status   int    `json:"status"`
-	Error    string `json:"error,omitempty"`
-	Previous string `json:"previous,omitempty"`
-	Next     string `json:"next,omitempty"`
-	Total    int    `json:"total,omitempty"`
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) error {
@@ -110,13 +92,13 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) e
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	status := http.StatusOK
-	if s, ok := d.(statbook); ok && s.status() != 0 {
+	if s, ok := d.(statuser); ok && s.status() != 0 {
 		status = s.status()
 	}
 
-	f := formatResponse{
+	f := transport.FormatResponse{
 		Data: d,
-		Meta: metaResponse{Status: status},
+		Meta: tranport.MetaResponse{Status: status},
 	}
 
 	if page, ok := d.(pager); ok {
@@ -153,34 +135,4 @@ func codeFrom(err error) int {
 	default:
 		return http.StatusInternalServerError
 	}
-}
-
-func nextLimitOffset(total, currentLimit, currentOffset int) (limit, offset int, err error) {
-	if currentLimit+currentOffset <= total {
-		// there exists next page
-		return currentLimit, currentOffset + currentLimit, nil
-	}
-	return 0, 0, ErrNoNextPage
-}
-
-func prevLimitOffset(total, currentLimit, currentOffset int) (limit, offset int, err error) {
-	if total > 0 && currentOffset > 0 {
-		limit = currentLimit
-
-		// there exists prev page
-		if currentOffset-currentLimit <= 0 {
-			offset = 0
-		} else {
-			offset = currentOffset - currentLimit
-		}
-
-		return
-	}
-	return 0, 0, ErrNoNextPage
-}
-
-func appendLimitOffset(values url.Values, limit, offset int) url.Values {
-	values.Set("limit", strconv.Itoa(limit))
-	values.Set("offset", strconv.Itoa(offset))
-	return values
 }
