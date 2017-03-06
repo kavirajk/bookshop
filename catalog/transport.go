@@ -1,10 +1,11 @@
-package user
+package book
 
 import (
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"context"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var (
+	ErrEmptyQuery = errors.New("empty query")
 	ErrNoNextPage = errors.New("no next page")
 	ErrNoPrevPage = errors.New("no prev page")
 )
@@ -28,96 +30,46 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(encodeError),
 	}
-	registerHandler := httptransport.NewServer(
+	searchHandler := httptransport.NewServer(
 		ctx,
-		e.RegisterEndpoint,
-		decodeRegisterRequest,
+		e.SearchEndpoint,
+		decodeSearchRequest,
 		encodeResponse,
 		options...,
 	)
-	loginHandler := httptransport.NewServer(
+	getHandler := httptransport.NewServer(
 		ctx,
-		e.LoginEndpoint,
-		decodeLoginRequest,
+		e.GetEndpoint,
+		decodeGetRequest,
 		encodeResponse,
 		options...,
 	)
-	resetPasswordHandler := httptransport.NewServer(
-		ctx,
-		e.ResetPasswordEndpoint,
-		decodeResetPasswordRequest,
-		encodeResponse,
-		options...,
-	)
-	changePasswordHandler := httptransport.NewServer(
-		ctx,
-		e.ChangePasswordEndpoint,
-		decodeChangePasswordRequest,
-		encodeResponse,
-		options...,
-	)
-	listHandler := httptransport.NewServer(
-		ctx,
-		e.ListEndpoint,
-		decodeListRequest,
-		encodeResponse,
-		options...,
-	)
-
 	r := mux.NewRouter()
 
-	r.Handle("/users/v1/register", registerHandler).Methods("POST")
-	r.Handle("/users/v1/login", loginHandler).Methods("POST")
-	r.Handle("/users/v1/reset-password", resetPasswordHandler).Methods("POST")
-	r.Handle("/users/v1/change-password", changePasswordHandler).Methods("POST")
-	r.Handle("/users/v1/list", listHandler).Methods("GET")
+	r.Handle("/books/v1/search", searchHandler).Methods("GET")
+	r.Handle("/books/v1/{id}", getHandler).Methods("GET")
 
 	return r
 }
-func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	var r registerRequest
-	err := json.NewDecoder(req.Body).Decode(&r)
-	return r, err
-}
-
-func decodeLoginRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	var r loginRequest
-	err := json.NewDecoder(req.Body).Decode(&r)
-	return r, err
-}
-
-func decodeResetPasswordRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	var r resetPasswordRequest
-	err := json.NewDecoder(req.Body).Decode(&r)
-	return r, err
-}
-
-func decodeChangePasswordRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	var r resetPasswordRequest
-	err := json.NewDecoder(req.Body).Decode(&r)
-	return r, err
-}
-
-func decodeListRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	lreq := listRequest{}
-	lreq.Order = req.FormValue("order")
-
-	// Ignoring errors since zero values makes sense for limit and offset
-	lreq.Limit, _ = strconv.Atoi(req.FormValue("limit"))
-	if lreq.Limit == 0 {
-		lreq.Limit = defaultPageLimit
+func decodeSearchRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+	q := req.FormValue("q")
+	if strings.TrimSpace(q) == "" {
+		return nil, ErrEmptyQuery
 	}
-	lreq.Offset, _ = strconv.Atoi(req.FormValue("offset"))
+	return searchRequest{
+		Q: q,
+	}, nil
+}
 
-	// url := req.URL
-	// url.Scheme = "http" // TODO(kaviraj): fix it by removing this hardcode values
-	// if url.Host == "" {
-	// 	url.Host = "localhost:8080"
-	// }
-
-	lreq.URL = req.URL
-
-	return lreq, nil
+func decodeGetRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		return nil, ErrBadRouting
+	}
+	return getRequest{
+		ID: id,
+	}
 }
 
 type errorer interface {
@@ -132,7 +84,7 @@ type pager interface {
 	page() (total int, previous, next string)
 }
 
-// formatResponse is the uniform response format used throughout the users service,
+// formatResponse is the uniform response format used throughout the books service,
 // for every endpoint response.
 type formatResponse struct {
 	Data interface{}  `json:"data,omitempty"`
@@ -158,7 +110,7 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, d interface{}) e
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	status := http.StatusOK
-	if s, ok := d.(statuser); ok && s.status() != 0 {
+	if s, ok := d.(statbook); ok && s.status() != 0 {
 		status = s.status()
 	}
 
@@ -192,7 +144,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 func codeFrom(err error) int {
 	switch err {
-	case ErrUserNotFound:
+	case ErrBookNotFound:
 		return http.StatusNotFound
 	case ErrUnauthorized:
 		return http.StatusUnauthorized

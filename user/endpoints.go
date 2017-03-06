@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"context"
+
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -99,13 +100,13 @@ func MakeListEndpoint(s Service) endpoint.Endpoint {
 		if err == nil {
 			params := req.URL.Query()
 			params = appendLimitOffset(params, limit, offset)
-			next = req.URL.Host + req.URL.Path + "?" + params.Encode()
+			next = req.URL.Path + "?" + params.Encode()
 		}
 		limit, offset, err = prevLimitOffset(total, req.Limit, req.Offset)
 		if err == nil {
 			params := req.URL.Query()
 			params = appendLimitOffset(params, limit, offset)
-			prev = req.URL.Host + req.URL.Path + "?" + params.Encode()
+			prev = req.URL.Path + "?" + params.Encode()
 		}
 
 		return listResponse{
