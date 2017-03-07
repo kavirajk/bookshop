@@ -111,6 +111,7 @@ func main() {
 
 	userHandler := user.MakeHTTPHandler(ctx, us, httpLogger)
 	catalogHandler := catalog.MakeHTTPHandler(ctx, cs, httpLogger)
+	orderHandler := order.MakeHTTPHandler(ctx, os, httpLogger)
 
 	mux.Handle("/users/v1/", userHandler)
 	mux.Handle("/catalog/v1/", catalogHandler)
