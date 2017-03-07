@@ -9,11 +9,10 @@ import (
 
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
-	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-
 	"context"
 
 	kitlog "github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/kavirajk/bookshop/catalog"
 	"github.com/kavirajk/bookshop/db/postgres"
 	"github.com/kavirajk/bookshop/order"
@@ -50,25 +49,25 @@ func main() {
 		log.Fatalf("error creating user repo: %v\n", err)
 	}
 
-	fieldKeys := []string{"method"}
+	fieldKeys := []string{"method", "error"}
 
 	var us user.Service
 	us = user.NewService(urepo)
 	us = user.LoggingMiddleware(kitlog.NewContext(logger).With("component", "user"))(us)
-	// us = user.InstrumentingMiddleware(
-	// 	kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: "api",
-	// 		Subsystem: "user_service",
-	// 		Name:      "request_count",
-	// 		Help:      "Number of requests received",
-	// 	}, fieldKeys),
-	// 	kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-	// 		Namespace: "api",
-	// 		Subsystem: "user_service",
-	// 		Name:      "request_latency_microseconds",
-	// 		Help:      "Total duration of requests in microseconds",
-	// 	}, fieldKeys),
-	// )(us)
+	us = user.InstrumentingMiddleware(
+		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "api",
+			Subsystem: "user_service",
+			Name:      "request_count",
+			Help:      "Number of requests received",
+		}, fieldKeys),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "api",
+			Subsystem: "user_service",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds",
+		}, fieldKeys),
+	)(us)
 
 	var cs catalog.Service
 	cs = catalog.NewService(crepo)

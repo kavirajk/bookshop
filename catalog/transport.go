@@ -40,8 +40,8 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 	)
 	r := mux.NewRouter()
 
-	r.Handle("/books/v1/search", searchHandler).Methods("GET")
-	r.Handle("/books/v1/{id}", getHandler).Methods("GET")
+	r.Handle("/catalog/v1/search", searchHandler).Methods("GET")
+	r.Handle("/catalog/v1/{id}", getHandler).Methods("GET")
 
 	return r
 }
