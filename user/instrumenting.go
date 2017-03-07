@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"context"
+
 	"github.com/go-kit/kit/metrics"
 )
 
@@ -81,7 +82,7 @@ func (mw instrmw) ChangePassword(ctx context.Context, userID string, oldpass, ne
 
 func (mw instrmw) List(ctx context.Context, order string, limit, offset int) (users []User, total int, err error) {
 	defer func(begin time.Time) {
-		lvs := []string{"method", "change_password", "error", fmt.Sprint(err != nil)}
+		lvs := []string{"method", "list", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())

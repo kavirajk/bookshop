@@ -16,7 +16,7 @@ func NewCatalogRepo(source string) (catalog.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.AutoMigrate(&catalog.Book{})
+	db.AutoMigrate(&catalog.Book{}, &catalog.Author{}, &catalog.Publisher{}, &catalog.Genre{})
 	return &catalogRepo{db: db}, nil
 }
 

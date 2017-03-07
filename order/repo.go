@@ -5,6 +5,6 @@ type Repo interface {
 	Create(order *Order) error
 	Save(order *Order) error
 	GetByID(ID string) (Order, error)
-	GetByUser(userID string) ([]Order, error)
+	ListByUser(userID string) ([]Order, error)
 	Drop() error
 }
