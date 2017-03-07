@@ -7,7 +7,5 @@ type Repo interface {
 	GetByID(ID string) (Book, error)
 	GetByISBN(ISBN string) (Book, error)
 	ListByAuthor(authorID string) ([]Book, error)
-	ListByPublisher(Name string) ([]Book, error)
-	ListByGenre(Name string) ([]Book, error)
 	Drop() error
 }

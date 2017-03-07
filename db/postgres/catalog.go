@@ -1,14 +1,10 @@
 package postgres
 
 import (
-	"bytes"
-	"encoding/base32"
-
 	"github.com/jinzhu/gorm"
 	"github.com/kavirajk/bookshop/catalog"
 	"github.com/kavirajk/bookshop/db"
 	_ "github.com/lib/pq"
-	"github.com/pborman/uuid"
 )
 
 type catalogRepo struct {
@@ -42,7 +38,7 @@ func (r *catalogRepo) filter(where ...interface{}) ([]catalog.Book, error) {
 	d := r.db.New()
 
 	err := d.Find(&books, where...).Error
-	return books, nil
+	return books, err
 }
 
 func (r *catalogRepo) GetByID(ID string) (catalog.Book, error) {
@@ -53,8 +49,10 @@ func (r *catalogRepo) GetByISBN(ISBN string) (catalog.Book, error) {
 	return r.get("isbn=?", ISBN)
 }
 
-func (r *catalogRepo) ListByAuthor(authorID string) (catalog.Book, error) {
-	return r.filter("email=?", email)
+func (r *catalogRepo) ListByAuthor(authorID string) ([]catalog.Book, error) {
+	// TODO(kaviraj)
+	// Query from intermediate table
+	return nil, nil
 }
 
 func (r *catalogRepo) GetByToken(token string) (catalog.Book, error) {
@@ -102,19 +100,4 @@ func (r *catalogRepo) Save(u *catalog.Book) error {
 
 func (r *catalogRepo) Drop() error {
 	return r.db.Exec("DELETE FROM CATALOGS").Error
-}
-
-// Helpers
-
-var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
-
-// NewID return global uniq indentifier that will be used as
-// primary key.
-func NewID() string {
-	var b bytes.Buffer
-	encoder := base32.NewEncoder(encoding, &b)
-	encoder.Write(uuid.NewRandom())
-	encoder.Close()
-	b.Truncate(26)
-	return b.String()
 }

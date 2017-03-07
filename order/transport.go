@@ -1,9 +1,8 @@
-package catalog
+package order
 
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"context"
 
@@ -15,7 +14,6 @@ import (
 )
 
 var (
-	ErrEmptyQuery = errors.New("empty query")
 	ErrBadRouting = errors.New("bad routing")
 )
 
@@ -24,45 +22,67 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(encodeError),
 	}
-	searchHandler := httptransport.NewServer(
+	placeOrderHandler := httptransport.NewServer(
 		ctx,
-		e.SearchEndpoint,
-		decodeSearchRequest,
+		e.PlaceOrderEndpoint,
+		decodePlaceOrderRequest,
 		encodeResponse,
 		options...,
 	)
-	getHandler := httptransport.NewServer(
+	getUserOrdersHandler := httptransport.NewServer(
 		ctx,
-		e.GetEndpoint,
-		decodeGetRequest,
+		e.GetUserOrdersEndpoint,
+		decodeGetUserOrdersRequest,
 		encodeResponse,
 		options...,
 	)
+	cancelOrdersHandler := httptransport.NewServer(
+		ctx,
+		e.CancelOrderEndpoint,
+		decodeCancelOrderRequest,
+		encodeResponse,
+		options...,
+	)
+
 	r := mux.NewRouter()
 
-	r.Handle("/books/v1/search", searchHandler).Methods("GET")
-	r.Handle("/books/v1/{id}", getHandler).Methods("GET")
+	r.Handle("/orders/v1/place", placeOrderHandler).Methods("POST")
+	r.Handle("/orders/v1/{user-id}", getUserOrdersHandler).Methods("GET")
+	r.Handle("/orders/v1/{user-id}/cancel/{id}", cancelOrdersHandler).Methods("POST")
 
 	return r
 }
-func decodeSearchRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-	q := req.FormValue("q")
-	if strings.TrimSpace(q) == "" {
-		return nil, ErrEmptyQuery
+func decodePlaceOrderRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+	var r placeOrderRequest
+	err := json.NewDecoder(req.Body).Decode(&r)
+	return r, err
+}
+
+func decodeGetUserOrdersRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+	vars := mux.Vars(req)
+	userID, ok := vars["user-id"]
+	if !ok {
+		return nil, errors.Wrap(ErrBadRouting, "user-id")
 	}
-	return searchRequest{
-		Q: q,
+	return getUserOrdersRequest{
+		UserID: userID,
 	}, nil
 }
 
-func decodeGetRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+func decodeCancelOrderRequest(ctx context.Context, req *http.Request) (interface{}, error) {
 	vars := mux.Vars(req)
-	id, ok := vars["id"]
+	userID, ok := vars["user-id"]
 	if !ok {
-		return nil, ErrBadRouting
+		return nil, errors.Wrap(ErrBadRouting, "user-id")
 	}
-	return getRequest{
-		ID: id,
+	ID, ok := vars["id"]
+	if !ok {
+		return nil, errors.Wrap(ErrBadRouting, "id")
+	}
+
+	return cancelOrderRequest{
+		UserID:  userID,
+		OrderID: ID,
 	}, nil
 }
 
@@ -127,9 +147,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 func codeFrom(err error) int {
 	switch err {
-	case ErrBookNotFound:
+	case ErrOrderNotFound:
 		return http.StatusNotFound
-	case ErrEmptyQuery, ErrBadRouting:
+	case ErrBadRouting:
 		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError

@@ -1,6 +1,13 @@
 package catalog
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	ErrBookNotFound = errors.New("book not found")
+)
 
 type Service interface {
 	// Search books based on free text
@@ -15,7 +22,7 @@ type basicService struct {
 }
 
 // NewCatalogService return basic Service implementation.
-func NewCatalogService(r Repo) Service {
+func NewService(r Repo) Service {
 	return basicService{r}
 }
 
