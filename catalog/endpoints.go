@@ -30,7 +30,7 @@ func MakeSearchEndpoint(s Service) endpoint.Endpoint {
 		if e != nil {
 			return searchResponse{Books: make([]Book, 0), Error: e}, nil
 		}
-		return searchResponse{Books: books, Status: http.StatusCreated}, nil
+		return searchResponse{Books: books, Status: http.StatusOK}, nil
 	}
 }
 
