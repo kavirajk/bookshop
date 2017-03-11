@@ -21,7 +21,18 @@ import (
 
 func main() {
 	var (
-		dbSource = flag.String("db", "", "Database source to connect to.")
+		dbDriver = flag.String(
+			"db-driver", envString("DB_DRIVER", "postgres"),
+			"Name of the database driver. e.g: postgres",
+		)
+		dbSource = flag.String(
+			"db-source", envString("DB_SOURCE", ""),
+			"Database source to connect to.e.g: user=<user> password=<password> dbname=<dbname>",
+		)
+		listenAddr = flag.String(
+			"http-addr", envString("HTTP_ADDR", "0.0.0.0:8080"),
+			"http address to listen to e.g: 0.0.0.0:8080",
+		)
 	)
 	flag.Parse()
 
@@ -30,21 +41,21 @@ func main() {
 	ctx := context.Background()
 
 	if *dbSource == "" {
-		fmt.Println("db argument is missing. Type --help for more info")
+		fmt.Println("db-source argument is missing. Type --help for more info")
 		os.Exit(1)
 	}
 
-	urepo, err := postgres.NewUserRepo(*dbSource)
+	urepo, err := postgres.NewUserRepo(*dbDriver, *dbSource)
 	if err != nil {
 		log.Fatalf("error creating user repo: %v\n", err)
 	}
 
-	crepo, err := postgres.NewCatalogRepo(*dbSource)
+	crepo, err := postgres.NewCatalogRepo(*dbDriver, *dbSource)
 	if err != nil {
 		log.Fatalf("error creating user repo: %v\n", err)
 	}
 
-	orepo, err := postgres.NewOrderRepo(*dbSource)
+	orepo, err := postgres.NewOrderRepo(*dbDriver, *dbSource)
 	if err != nil {
 		log.Fatalf("error creating user repo: %v\n", err)
 	}
@@ -119,5 +130,6 @@ func main() {
 	mux.Handle("/metrics", stdprometheus.Handler())
 	http.Handle("/", mux)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("bookserver: Listening on", *listenAddr)
+	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }

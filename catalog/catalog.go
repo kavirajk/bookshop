@@ -10,13 +10,13 @@ type Book struct {
 	ISBN            string     `json:"isbn"`
 	Title           string     `json:"title"`
 	TagString       string     `json:"-"`
-	Authors         []Author   `json:"authors" gorm:"many_to_many"`
-	Genres          []Genre    `json:"generes" gorm:"many_to_many"`
-	Publisher       *Publisher `json:"publisher,omitempty"`
+	Authors         []Author   `json:"-" gorm:"many_to_many"`
+	Genres          []Genre    `json:"-" gorm:"many_to_many"`
+	Publisher       *Publisher `json:"-"`
 	PublisherID     string     `json:"-"`
 	PublicationYear string     `json:"publication_year"`
-	PublicationDate time.Time  `json:"publication_date"`
-	SampleURL       string     `json:"sample_url"`
+	PublicationDate time.Time  `json:"-"`
+	SampleURL       string     `json:"-"`
 	FullURL         string     `json:"-"`
 	Price           float64    `json:"price"`
 }

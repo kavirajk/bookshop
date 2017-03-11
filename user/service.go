@@ -60,7 +60,7 @@ func (s service) Register(_ context.Context, nuser NewUser) (User, error) {
 func (s service) Login(_ context.Context, email, password string) (User, error) {
 	user, err := s.repo.GetByEmail(email)
 	if err != nil {
-		return User{}, err
+		return User{}, ErrUserNotFound
 	}
 	if user.Password != calculatePassHash(password, user.Salt) {
 		return User{}, ErrUnauthorized

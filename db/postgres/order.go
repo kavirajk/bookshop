@@ -11,8 +11,8 @@ type orderRepo struct {
 	db *gorm.DB
 }
 
-func NewOrderRepo(source string) (order.Repo, error) {
-	db, err := gorm.Open("postgres", source)
+func NewOrderRepo(driver, source string) (order.Repo, error) {
+	db, err := gorm.Open(driver, source)
 	if err != nil {
 		return nil, err
 	}

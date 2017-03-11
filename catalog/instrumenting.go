@@ -36,6 +36,17 @@ func (mw instrmw) Search(ctx context.Context, query string) (books []Book, err e
 	return
 }
 
+func (mw instrmw) List(ctx context.Context, order string, limit, offset int) (books []Book, total int, err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "search", "error", fmt.Sprint(err != nil)}
+		mw.requestCount.With(lvs...).Add(1)
+		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	books, total, err = mw.next.List(ctx, order, limit, offset)
+	return
+}
+
 func (mw instrmw) Get(ctx context.Context, ID string) (book Book, err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "get", "error", fmt.Sprint(err != nil)}

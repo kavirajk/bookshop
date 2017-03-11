@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 	"github.com/kavirajk/bookshop/catalog"
 	"github.com/kavirajk/bookshop/db"
@@ -11,8 +13,8 @@ type catalogRepo struct {
 	db *gorm.DB
 }
 
-func NewCatalogRepo(source string) (catalog.Repo, error) {
-	db, err := gorm.Open("postgres", source)
+func NewCatalogRepo(driver, source string) (catalog.Repo, error) {
+	db, err := gorm.Open(driver, source)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +76,16 @@ func (r *catalogRepo) List(order string, limit, offset int) ([]catalog.Book, int
 
 	err := db.Order(order).Limit(limit).Offset(offset).Find(&catalogs).Error
 	return catalogs, total, err
+}
+
+func (r *catalogRepo) Search(title string) ([]catalog.Book, error) {
+	books := make([]catalog.Book, 0)
+	db := r.db.New()
+	q := fmt.Sprintf("%%%s%%", title)
+	if err := db.Where("title ILIKE ?", q).Find(&books).Error; err != nil {
+		return books, err
+	}
+	return books, nil
 }
 
 func (r *catalogRepo) Create(u *catalog.Book) error {

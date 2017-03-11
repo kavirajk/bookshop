@@ -15,8 +15,8 @@ type userRepo struct {
 	db *gorm.DB
 }
 
-func NewUserRepo(source string) (user.Repo, error) {
-	db, err := gorm.Open("postgres", source)
+func NewUserRepo(driver, source string) (user.Repo, error) {
+	db, err := gorm.Open(driver, source)
 	if err != nil {
 		return nil, err
 	}
