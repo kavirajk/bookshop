@@ -25,14 +25,12 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 		httptransport.ServerErrorEncoder(encodeError),
 	}
 	searchHandler := httptransport.NewServer(
-		ctx,
 		e.SearchEndpoint,
 		decodeSearchRequest,
 		encodeResponse,
 		options...,
 	)
 	getHandler := httptransport.NewServer(
-		ctx,
 		e.GetEndpoint,
 		decodeGetRequest,
 		encodeResponse,

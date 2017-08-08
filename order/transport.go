@@ -23,21 +23,18 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 		httptransport.ServerErrorEncoder(encodeError),
 	}
 	placeOrderHandler := httptransport.NewServer(
-		ctx,
 		e.PlaceOrderEndpoint,
 		decodePlaceOrderRequest,
 		encodeResponse,
 		options...,
 	)
 	getUserOrdersHandler := httptransport.NewServer(
-		ctx,
 		e.GetUserOrdersEndpoint,
 		decodeGetUserOrdersRequest,
 		encodeResponse,
 		options...,
 	)
 	cancelOrdersHandler := httptransport.NewServer(
-		ctx,
 		e.CancelOrderEndpoint,
 		decodeCancelOrderRequest,
 		encodeResponse,

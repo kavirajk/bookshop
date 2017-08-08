@@ -29,35 +29,30 @@ func MakeHTTPHandler(ctx context.Context, s Service, logger log.Logger) http.Han
 		httptransport.ServerErrorEncoder(encodeError),
 	}
 	registerHandler := httptransport.NewServer(
-		ctx,
 		e.RegisterEndpoint,
 		decodeRegisterRequest,
 		encodeResponse,
 		options...,
 	)
 	loginHandler := httptransport.NewServer(
-		ctx,
 		e.LoginEndpoint,
 		decodeLoginRequest,
 		encodeResponse,
 		options...,
 	)
 	resetPasswordHandler := httptransport.NewServer(
-		ctx,
 		e.ResetPasswordEndpoint,
 		decodeResetPasswordRequest,
 		encodeResponse,
 		options...,
 	)
 	changePasswordHandler := httptransport.NewServer(
-		ctx,
 		e.ChangePasswordEndpoint,
 		decodeChangePasswordRequest,
 		encodeResponse,
 		options...,
 	)
 	listHandler := httptransport.NewServer(
-		ctx,
 		e.ListEndpoint,
 		decodeListRequest,
 		encodeResponse,
