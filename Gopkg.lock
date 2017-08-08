@@ -22,14 +22,14 @@
 [[projects]]
   name = "github.com/go-stack/stack"
   packages = ["."]
-  revision = "54be5f394ed2c3e19dac9134a40a95ba5a017f7b"
-  version = "v1.5.4"
+  revision = "817915b46b97fd7bb80e8ab6b69f01a53ac3eebf"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "0a4f71a498b7c4812f64969510bcb4eca251e33a"
+  revision = "1909bc2f63dc92bb931deace8b8312c4db72d12f"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -76,8 +76,8 @@
 [[projects]]
   name = "github.com/pborman/uuid"
   packages = ["."]
-  revision = "a97ce2ca70fa5a848076093f05e639a89ca34d06"
-  version = "v1.0"
+  revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
+  version = "v1.1"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -101,7 +101,7 @@
   branch = "master"
   name = "github.com/prometheus/common"
   packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
-  revision = "3e6a7635bac6573d43f49f97b47eb9bda195dba8"
+  revision = "61f87aac8082fa8c3c5655c7608d7478d46ac2ad"
 
 [[projects]]
   branch = "master"
