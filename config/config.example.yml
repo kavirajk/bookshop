@@ -1,0 +1,8 @@
+server:
+  # bookshop server runs in this port
+  port: ":8080"
+datastore:
+  # name of the database driver to use e.g: postgres, sqlite, mysql
+  driver: ""
+  # address of the running instance of database server
+  address: ""

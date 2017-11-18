@@ -1,3 +1,6 @@
 test-rest/
 .env
 vendor/
+config/config.yml
+config/config.yaml
+build/
