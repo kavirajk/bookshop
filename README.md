@@ -1,22 +1,51 @@
 # BookShop
 
-This example try to demonstrates building a "real-world" web services in go.
+This repo try to demonstrates building a "real-world" web services in go. It is used only for learning purposes.
 
 ## Description
 
-This repo focus on building the web services in monolithic way. Although we structure the app in such way migrating from monolithic to microservices would be easy.
+We focus on building the services in monolithic way first. We iterate over to split this monolithic to microservices that can be deployed separately.
+
+Bookshop consists of following services
+* Auth  - Login, Signup, ResetPassword, Impersonate and Forgot password
+* Catalog - View, filter, search books
+* Order  - Place, View and Cancel Orders
+* Payment - Add/Edit payment method and Make payment.
+* Notification - Email and SMS notifications.
+
+### Roadmap
+- [ ] Elegant monolitic exposing REST endpoints for all the services - v1.0
+- [ ] Add async task queue support - v2.0
+- [ ] Catalog search via elastic search - v3.0
+- [ ] Split to microservices. grpc transport between microservices and single API gateway - v4.0
+- [ ] Dockerize all the services - v5.0
+- [ ] Make services deployable via kubernetes - v6.0
+- [ ] Add service discovery support - v7.0
+- [ ] Monitoring via Prometheus and Grafana - v8.0
+- [ ] Log aggregation via "OK log" - v9.0
 
 ### Organization
 
-This application consists of three main services. 
+We will stick to Domain Driven Design as much as possible.
 
-- User service
-- Catalog Service
-- Order services
+```
+bookshop
+├── build                  # Compiled files
+├── cmd                    # Main entry points
+    ├── bookstore
+		├── main.go
+├── internal               # Domain related packages
+    ├── auth
+    ├── catalog
+    └── order
+    └── payment
+    └── notification
+└── resource               # High-level packages. Can be used by any domain 
+	└── db
+└── vendor
+└── Gopkg.toml
+└── Gopkg.yaml
+```
 
-To make it more "real-world", I have added a simple worker to process asynchronous tasks and simple catalog search via elastic search backend.
 
-- __user__ - user service. Handles login, signup and reset password
-- __catalog__ - catalog service. Listing and get details of an item(Book)
-- __order__ - order service. Place an order.
-- __worker__ - used by order to process the placed order aysnchronously
+
