@@ -33,7 +33,6 @@ bookshop
 ├── build                  # Compiled files
 ├── cmd                    # Main entry points
     ├── bookstore
-		├── main.go
 ├── internal               # Domain related packages
     ├── auth
     ├── catalog
