@@ -7,7 +7,8 @@ This repo try to demonstrates building a "real-world" web services in go. It is 
 We focus on building the services in monolithic way first. We iterate over to split this monolithic to microservices that can be deployed separately.
 
 Bookshop consists of following services
-* Auth  - Login, Signup, ResetPassword, Impersonate and Forgot password
+* Auth  - Login, Signup, Impersonate
+* User - Change Passord, Forgot password, Profile page
 * Catalog - View, filter, search books
 * Order  - Place, View and Cancel Orders
 * Payment - Add/Edit payment method and Make payment.
@@ -46,5 +47,9 @@ bookshop
 └── Gopkg.yaml
 ```
 
+### Setup
 
+	bash-4.3$ make
+	bash-4.3$ ./build/bookshop -cfgpath config/config.yml
+		
 
