@@ -18,7 +18,7 @@ var (
 
 // User represents domain model of user service.
 type User struct {
-	ID        string `json:"id" sql:"primary_key"`
+	ID        int    `json:"id" sql:"primary_key"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
@@ -26,7 +26,7 @@ type User struct {
 	Password  string `json:"-"`
 	Salt      string `json:"-"`
 	ResetKey  string `json:"-"`
-	AuthToken string `json:"-"`
+	IsActive  bool   `json:"-"`
 }
 
 // New create empty user with random salt.
