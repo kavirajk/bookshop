@@ -23,10 +23,10 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Username  string `json:"username"`
-	Password  string `json:"-"`
-	Salt      string `json:"-"`
-	ResetKey  string `json:"-"`
 	IsActive  bool   `json:"-"`
+
+	pwdHash string `json:"-"`
+	salt    string `json:"-"`
 }
 
 // New create empty user with random salt.
@@ -41,7 +41,7 @@ func New() User {
 func (u *User) NewSalt() {
 	h := sha1.New()
 	io.WriteString(h, strconv.Itoa(int(time.Now().UnixNano())))
-	u.Salt = fmt.Sprintf("%x", h.Sum(nil))
+	u.salt = fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // NewUser represents user who is about to register.
@@ -83,7 +83,7 @@ func (n *NewUser) User() User {
 	u.FirstName = n.FirstName
 	u.LastName = n.LastName
 	u.Email = n.Email
-	u.Password = calculatePassHash(n.Password, u.Salt)
+	u.pwdHash = calculatePassHash(n.Password, u.salt)
 	u.Username = strings.Split(n.Email, "@")[0]
 	return u
 }

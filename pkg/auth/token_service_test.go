@@ -25,7 +25,6 @@ func TestGenerateAccessToken(t *testing.T) {
 	ts := NewTokenService("bookshop", privKey, pubKey, 10*time.Second, logger)
 	cases := []struct {
 		u          *user.User
-		ops        []ClaimOption
 		shouldFail bool
 	}{
 		{
@@ -39,7 +38,7 @@ func TestGenerateAccessToken(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		token, err := ts.GenerateAccessToken(c.u, c.ops...)
+		token, err := ts.GenerateAccessToken(c.u)
 		if c.shouldFail {
 			require.Error(t, err)
 			continue

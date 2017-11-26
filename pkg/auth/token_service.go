@@ -38,7 +38,7 @@ func NewTokenService(issuer string, privKey *rsa.PrivateKey, pubKey *rsa.PublicK
 }
 
 // GenerateAccessToken returns a JWT encoded with user detail.
-func (ts *TokenService) GenerateAccessToken(u *user.User, options ...ClaimOption) (string, error) {
+func (ts *TokenService) GenerateAccessToken(u *user.User) (string, error) {
 	utcNow := time.Now().UTC()
 
 	claim := &Claim{
