@@ -34,19 +34,45 @@ func NewRepo(logger log.Logger) Repo {
 	return &repo{logger: logger}
 }
 
-// TODO
 func (r *repo) Get(db *gorm.DB, scopes ...Scope) (*User, error) {
-	return nil, nil
+	db = db.Scopes(scopes...)
+
+	var u User
+	if err := db.First(&u).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrRepoUserNotFound
+		}
+		return nil, errors.Wrapf(err, "user.repo.Get")
+	}
+
+	return &u, nil
 }
 
 func (r *repo) Find(db *gorm.DB, scopes ...Scope) ([]User, error) {
-	return nil, nil
+	db = db.Scopes(scopes...)
+
+	var users []User
+
+	if err := db.Find(&users).Error; err != nil {
+		return nil, errors.Wrap(err, "user.repo.Find")
+	}
+	return users, nil
 }
 
 func (r *repo) Save(db *gorm.DB, u *User, scopes ...Scope) error {
+	db = db.Scopes(scopes...)
+
+	if err := db.Save(u).Error; err != nil {
+		return errors.Wrap(err, "user.repo.Save")
+	}
 	return nil
 }
 
 func (r *repo) Delete(db *gorm.DB, scopes ...Scope) error {
+	db = db.Scopes(scopes...)
+
+	if err := db.Delete(&User{}); err != nil {
+		return errors.Wrap(err, "user.repo.Delete")
+	}
 	return nil
 }

@@ -10,21 +10,29 @@ import (
 
 // Config holds different types of config.
 type Config struct {
-	Datastore datastore
-	Server    server
+	Datastore Datastore
+	Server    Server
+	Redis     Redis
 }
 
-// datastore holds config related to data source URL, driver name,
+// Datastore holds config related to data source URL, driver name,
 // etc.
-type datastore struct {
-	Driver  string `yaml:"driver"`
-	Address string `yaml:"address"`
+type Datastore struct {
+	Driver         string `yaml:"driver"`
+	Address        string `yaml:"address"`
+	MigrationsPath string `yaml:"migrationsPath"`
 }
 
-// server holds server config.
-type server struct {
+// Server holds server config.
+type Server struct {
 	// address:port as a string
 	Address string `yaml:"address"`
+}
+
+type Redis struct {
+	//Address:port as a string
+	Address string `yaml:"address"`
+	DBNum   int    `yaml:"dbnum"`
 }
 
 // FromFile creates a Config by loading values from `path`.

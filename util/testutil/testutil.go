@@ -5,15 +5,20 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/jinzhu/gorm"
 )
 
 const (
 	// To avoid reset actual db during testing in local.
 	redisTestDB = 3
+
+	testDBName = "bs-test"
 )
 
 var (
 	redisPool *redis.Pool
+
+	testDB *gorm.DB
 )
 
 // SetupRedis prepare redis server available for testing.
@@ -38,4 +43,8 @@ func TearDownRedis(t *testing.T) {
 	conn := redisPool.Get()
 	defer conn.Close()
 	conn.Do("FLUSHALL")
+}
+
+func NewDB() *gorm.DB {
+	gorm.Open()
 }

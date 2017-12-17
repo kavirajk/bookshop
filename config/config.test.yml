@@ -1,0 +1,8 @@
+server:
+  address: ":8080"
+datastore:
+  driver: "postgres"
+  address: "postgresql://user:user@localhost/bs_test?connect_timeout=10&sslmode=disable"
+redis:
+  address: "localhost:6392"
+  dbnum: 0

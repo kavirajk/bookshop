@@ -15,6 +15,7 @@ var (
 	defaultValue = 1
 
 	ErrTokenNotFound = errors.New("auth.repo: token not found")
+	ErrTTLNotFound   = errors.New("auth.repo: ttl not found")
 )
 
 // Repo is the set of methods that manipulate store and retrieve of
@@ -77,6 +78,12 @@ func (r *repo) GetTTL(rd *redis.Pool, token string) (time.Duration, error) {
 	if err != nil {
 		level.Error(r.logger).Log("event", "GetTTL", "token", token, "err", err)
 		return 0, errors.Wrap(err, "auth.repo.GetTTL.failed")
+	}
+	switch v {
+	case -1:
+		return 0, ErrTTLNotFound
+	case -2:
+		return 0, ErrTokenNotFound
 	}
 	return time.Duration(v) * time.Second, nil
 }
