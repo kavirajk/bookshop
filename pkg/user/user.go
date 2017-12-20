@@ -1,14 +1,8 @@
 package user
 
 import (
-	"crypto/sha1"
-	"fmt"
-	"io"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -18,30 +12,17 @@ var (
 
 // User represents domain model of user service.
 type User struct {
-	ID        int    `json:"id" sql:"primary_key"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Username  string `json:"username"`
-	IsActive  bool   `json:"-"`
-
-	pwdHash string `json:"-"`
-	salt    string `json:"-"`
+	ID           int    `json:"id" sql:"primary_key"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Email        string `json:"email"`
+	Username     string `json:"username"`
+	IsActive     bool   `json:"-"`
+	PasswordHash string `json:"-"`
 }
 
-// New create empty user with random salt.
-func New() User {
-	u := User{}
-	u.NewSalt()
-	return u
-}
-
-// NewSalt creates random salt value based on current time.
-// usefull to hash password in a secure way.
-func (u *User) NewSalt() {
-	h := sha1.New()
-	io.WriteString(h, strconv.Itoa(int(time.Now().UnixNano())))
-	u.salt = fmt.Sprintf("%x", h.Sum(nil))
+func (_ User) TableName() string {
+	return "bsuser"
 }
 
 // NewUser represents user who is about to register.
@@ -76,21 +57,10 @@ func (n *NewUser) Validate() error {
 	return nil
 }
 
-// User map NewUser with domain User.
-func (n *NewUser) User() User {
-	u := New()
-	u.NewSalt()
-	u.FirstName = n.FirstName
-	u.LastName = n.LastName
-	u.Email = n.Email
-	u.pwdHash = calculatePassHash(n.Password, u.salt)
-	u.Username = strings.Split(n.Email, "@")[0]
-	return u
-}
-
-func calculatePassHash(pass, salt string) string {
-	h := sha1.New()
-	io.WriteString(h, salt)
-	io.WriteString(h, pass)
-	return fmt.Sprintf("%x", h.Sum(nil))
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }

@@ -1,28 +1,40 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrRepoUserNotFound = errors.New("user.repo: not found")
+	ErrRepoUserNotFound        = errors.New("user: not found")
+	ErrRepoUserInvalidPassword = errors.New("user: invalid password")
 )
 
 type Repo interface {
 	// Get returns a single user matching scopes.
 	// Returns ErrRepoUserNotFound if scopes doesn't match any.
-	Get(db *gorm.DB, scopes ...Scope) (*User, error)
+	Get(db *gorm.DB, ID int) (*User, error)
+
+	// GetByEmail retuns a single user matching the email.
+	// Return ErrRepoUserNotFound if email doesn't match any.
+	GetByEmail(db *gorm.DB, email string) (*User, error)
+
+	// Authenticate validates the email and password and
+	// returns User instance if validation is success
+	Authenticate(db *gorm.DB, email, password string) (*User, error)
 
 	// Find returns slice of users matching the scopes.
-	Find(db *gorm.DB, scopes ...Scope) ([]User, error)
+	// Find(db *gorm.DB, scopes ...Scope) ([]User, error)
 
-	// Save either creates/update the user matching the scope.
-	Save(db *gorm.DB, u *User, scopes ...Scope) error
+	// // Save either creates/update the user matching the scope.
+	// Save(db *gorm.DB, u *User, scopes ...Scope) error
 
-	// Delete remove the users matching the scopes.
-	Delete(db *gorm.DB, scopes ...Scope) error
+	// // Delete remove the users matching the scopes.
+	// Delete(db *gorm.DB, scopes ...Scope) error
 }
 
 // repo implements simple Repo.
@@ -34,11 +46,9 @@ func NewRepo(logger log.Logger) Repo {
 	return &repo{logger: logger}
 }
 
-func (r *repo) Get(db *gorm.DB, scopes ...Scope) (*User, error) {
-	db = db.Scopes(scopes...)
-
+func (r *repo) Get(db *gorm.DB, ID int) (*User, error) {
 	var u User
-	if err := db.First(&u).Error; err != nil {
+	if err := db.First(&u, "id=?", ID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrRepoUserNotFound
 		}
@@ -48,31 +58,27 @@ func (r *repo) Get(db *gorm.DB, scopes ...Scope) (*User, error) {
 	return &u, nil
 }
 
-func (r *repo) Find(db *gorm.DB, scopes ...Scope) ([]User, error) {
-	db = db.Scopes(scopes...)
-
-	var users []User
-
-	if err := db.Find(&users).Error; err != nil {
-		return nil, errors.Wrap(err, "user.repo.Find")
+func (r *repo) GetByEmail(db *gorm.DB, email string) (*User, error) {
+	var u User
+	if err := db.First(&u, "email=?", email).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrRepoUserNotFound
+		}
+		return nil, errors.Wrapf(err, "user with email=%s not found", email)
 	}
-	return users, nil
+	return &u, nil
 }
 
-func (r *repo) Save(db *gorm.DB, u *User, scopes ...Scope) error {
-	db = db.Scopes(scopes...)
-
-	if err := db.Save(u).Error; err != nil {
-		return errors.Wrap(err, "user.repo.Save")
+// Authenticate validates email and password.
+// Returns a valid user if validation is success.
+func (r *repo) Authenticate(db *gorm.DB, email, password string) (*User, error) {
+	user, err := r.GetByEmail(db, email)
+	if err != nil {
+		return nil, err
 	}
-	return nil
-}
-
-func (r *repo) Delete(db *gorm.DB, scopes ...Scope) error {
-	db = db.Scopes(scopes...)
-
-	if err := db.Delete(&User{}); err != nil {
-		return errors.Wrap(err, "user.repo.Delete")
+	fmt.Printf("%+v\n", user)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return nil, ErrRepoUserInvalidPassword
 	}
-	return nil
+	return user, nil
 }

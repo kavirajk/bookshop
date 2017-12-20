@@ -1,11 +1,17 @@
 package testutil
 
 import (
+	"os"
 	"testing"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
+	"github.com/kavirajk/bookshop/resource/config"
+	"github.com/kavirajk/bookshop/resource/db"
+	"github.com/kavirajk/bookshop/util/pathutil"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -45,6 +51,18 @@ func TearDownRedis(t *testing.T) {
 	conn.Do("FLUSHALL")
 }
 
-func NewDB() *gorm.DB {
-	gorm.Open()
+func NewDB() (*gorm.DB, error) {
+	root, err := pathutil.ProjectRoot()
+	if err != nil {
+		return nil, err
+	}
+	config, err := config.FromFile(root + "/config/test.yml")
+	if err != nil {
+		return nil, err
+	}
+	d, err := db.New(config.Datastore, log.NewLogfmtLogger(os.Stdout))
+	if err != nil {
+		return nil, err
+	}
+	return d.DB, nil
 }

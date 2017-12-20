@@ -1,41 +1,43 @@
 package db
 
 import (
-	"errors"
-
 	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
 	"github.com/kavirajk/bookshop/resource/config"
+	"github.com/pkg/errors"
 )
 
 var (
 	ErrMigrationsPathInvalid = errors.New("db: invalid migrations path")
 )
 
-type db struct {
+type resource struct {
 	logger log.Logger
 	config config.Datastore
 	DB     *gorm.DB
 }
 
-func New(cfg config.Datastore, logger log.Logger) (*db, error) {
+func New(cfg config.Datastore, logger log.Logger) (*resource, error) {
 	db, err := gorm.Open(cfg.Driver, cfg.Address)
 	if err != nil {
-		return errors.Wrap(err, "db.New")
+		return nil, errors.Wrap(err, "db.New")
 	}
 
-	return &db{
+	logger.Log("event", "create db resource", "status", "success")
+
+	return &resource{
 		logger: logger,
 		config: cfg,
 		DB:     db,
-	}
-	logger.Log("event", "create db resource", "status", "success")
+	}, nil
 }
 
-func (d *db) MigrateUp() error {
-
+func (r *resource) MigrateUp() error {
+	// TODO(kaviraj): Replace with schema migrations
+	// r.DB.AutoMigrate(&user.User{})
+	return nil
 }
 
-func (d *db) MigrateDown() error {
-
+func (r *resource) MigrateDown() error {
+	return nil
 }

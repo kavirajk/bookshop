@@ -14,7 +14,7 @@ type Service interface {
 	Register(ctx context.Context, user *user.NewUser) error
 
 	// Login returns auth Bundle containing tokens.
-	Login(ctx context.Context, userID, password string) (*Bundle, error)
+	Login(ctx context.Context, email, password string) (*Bundle, error)
 
 	// DecodeAccessToken decodes access token to claims.
 	DecodeAccessToken(ctx context.Context, token string) (*Claim, error)
@@ -51,7 +51,7 @@ func NewService(logger log.Logger, ts *TokenService, db *gorm.DB) Service {
 func (s *service) Register(ctx context.Context, user *user.NewUser) error {
 	return nil
 }
-func (s *service) Login(ctx context.Context, userID, password string) (*Bundle, error) {
+func (s *service) Login(ctx context.Context, email, password string) (*Bundle, error) {
 	return nil, nil
 }
 func (s *service) DecodeAccessToken(ctx context.Context, accessToken string) (*Claim, error) {
