@@ -19,10 +19,11 @@ Bookshop consists of following services
 - [ ] Catalog search via elastic search - v3.0
 - [ ] Split to microservices. grpc transport between microservices and single API gateway - v4.0
 - [ ] Dockerize all the services - v5.0
-- [ ] Make services deployable via kubernetes - v6.0
-- [ ] Add service discovery support - v7.0
-- [ ] Monitoring via Prometheus and Grafana - v8.0
-- [ ] Log aggregation via "OK log" - v9.0
+- [ ] Introduce service mesh between services - v6.0
+- [ ] Make services deployable via kubernetes - v7.0
+- [ ] Add service discovery support - v8.0
+- [ ] Monitoring via Prometheus and Grafana - v9.0
+- [ ] Log aggregation via "OK log" - v10.0
 
 ### Organization
 
@@ -33,7 +34,7 @@ bookshop
 ├── build                  # Compiled files
 ├── cmd                    # Main entry points
     ├── bookstore
-├── internal               # Domain related packages
+├── pkg                    # Domain related packages
     ├── auth
     ├── catalog
     └── order
