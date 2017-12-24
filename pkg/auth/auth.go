@@ -52,11 +52,14 @@ func (s *service) Register(ctx context.Context, user *user.NewUser) error {
 	return nil
 }
 func (s *service) Login(ctx context.Context, email, password string) (*Bundle, error) {
-	user, err := s.userRepo.Authenticate(s.db, email, password)
+	u, err := s.userRepo.Authenticate(s.db, email, password)
+	if err == user.ErrRepoUserNotFound {
+		return nil, ErrInvalidCredentials
+	}
 	if err != nil {
 		return nil, err
 	}
-	token, err := s.ts.GenerateAccessToken(user)
+	token, err := s.ts.GenerateAccessToken(u)
 	if err != nil {
 		return nil, err
 	}

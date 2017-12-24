@@ -13,9 +13,6 @@ var (
 	DefaultTTL = time.Hour * 24 * 30 // 1 month
 	// Used to mark the key(token)
 	defaultValue = 1
-
-	ErrTokenNotFound = errors.New("auth.repo: token not found")
-	ErrTTLNotFound   = errors.New("auth.repo: ttl not found")
 )
 
 // Repo is the set of methods that manipulate store and retrieve of

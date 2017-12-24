@@ -38,5 +38,10 @@ type loginRequest struct {
 type loginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	Err          error  `json:"err, omitempty"`
+	Err          error  `json:"error,omitempty"`
+}
+
+// error() implements errorer interface. To handle error response differently.
+func (l loginResponse) error() error {
+	return l.Err
 }

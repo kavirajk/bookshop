@@ -1,15 +1,8 @@
 package auth
 
 import (
-	"errors"
-
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/kavirajk/bookshop/util/validator"
-)
-
-var (
-	ErrClaimIDInvalid    = errors.New("claim: invalid id")
-	ErrClaimEmailInvalid = errors.New("claim: invalid email")
 )
 
 // Claim represents a JWT claim.

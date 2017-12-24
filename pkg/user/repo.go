@@ -1,8 +1,6 @@
 package user
 
 import (
-	"fmt"
-
 	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -76,7 +74,6 @@ func (r *repo) Authenticate(db *gorm.DB, email, password string) (*User, error) 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%+v\n", user)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, ErrRepoUserInvalidPassword
 	}
