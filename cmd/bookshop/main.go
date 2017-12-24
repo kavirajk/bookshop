@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 
+	"github.com/kavirajk/bookshop/pkg/auth"
 	"github.com/kavirajk/bookshop/resource/config"
+	"github.com/kavirajk/bookshop/resource/db"
 )
 
 func main() {
@@ -32,6 +36,33 @@ func main() {
 		os.Exit(1)
 	}
 
+	dbr, err := db.New(cfg.Datastore, logger)
+	if err != nil {
+		logger.Log("error", err)
+	}
+
+	pubKey, err := auth.LoadPublicKey("config/certs/public.pem")
+	if err != nil {
+		level.Error(logger).Log("name", "loading public key", "error", err)
+		os.Exit(1)
+	}
+
+	privKey, err := auth.LoadPrivateKey("config/certs/private.pem")
+	if err != nil {
+		level.Error(logger).Log("name", "loading private key", "error", err)
+		os.Exit(1)
+	}
+
+	tokenSvc := auth.NewTokenService("bs", privKey, pubKey, 24*10*time.Hour, logger)
+
+	authSvc := auth.NewService(logger, tokenSvc, dbr.DB)
+
+	http.Handle("/", auth.MakeHTTPHandler(authSvc, logger))
+	http.Handle("/hello", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello")
+	}))
+
 	logger.Log("event", fmt.Sprintf("listening on: %s", cfg.Server.Address))
+
 	logger.Log("error", (http.ListenAndServe(cfg.Server.Address, nil)))
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
 	"github.com/kavirajk/bookshop/resource/config"
+	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 

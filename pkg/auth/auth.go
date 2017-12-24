@@ -31,19 +31,19 @@ type Bundle struct {
 
 // service is a basic service that implement auth Service interface.
 type service struct {
-	logger log.Logger
-	ts     *TokenService
-	repo   user.Repo
-	db     *gorm.DB
+	logger   log.Logger
+	ts       *TokenService
+	userRepo user.Repo
+	db       *gorm.DB
 }
 
 // NewService returns new auth Service.
 func NewService(logger log.Logger, ts *TokenService, db *gorm.DB) Service {
 	return &service{
-		logger: logger,
-		ts:     ts,
-		repo:   user.NewRepo(logger),
-		db:     db,
+		logger:   logger,
+		ts:       ts,
+		userRepo: user.NewRepo(logger),
+		db:       db,
 	}
 }
 
@@ -52,7 +52,15 @@ func (s *service) Register(ctx context.Context, user *user.NewUser) error {
 	return nil
 }
 func (s *service) Login(ctx context.Context, email, password string) (*Bundle, error) {
-	return nil, nil
+	user, err := s.userRepo.Authenticate(s.db, email, password)
+	if err != nil {
+		return nil, err
+	}
+	token, err := s.ts.GenerateAccessToken(user)
+	if err != nil {
+		return nil, err
+	}
+	return &Bundle{AccessToken: token}, nil
 }
 func (s *service) DecodeAccessToken(ctx context.Context, accessToken string) (*Claim, error) {
 	return nil, nil
