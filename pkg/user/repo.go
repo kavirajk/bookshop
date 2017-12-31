@@ -28,8 +28,8 @@ type Repo interface {
 	// Find returns slice of users matching the scopes.
 	// Find(db *gorm.DB, scopes ...Scope) ([]User, error)
 
-	// // Save either creates/update the user matching the scope.
-	// Save(db *gorm.DB, u *User, scopes ...Scope) error
+	// Save either creates/update the user in the given data store.
+	Save(db *gorm.DB, u *User) error
 
 	// // Delete remove the users matching the scopes.
 	// Delete(db *gorm.DB, scopes ...Scope) error
@@ -78,4 +78,10 @@ func (r *repo) Authenticate(db *gorm.DB, email, password string) (*User, error) 
 		return nil, ErrRepoUserInvalidPassword
 	}
 	return user, nil
+}
+
+// Save stores the user in a datastore. any non-nil error represents some
+// datastore error.
+func (r *repo) Save(db *gorm.DB, u *User) error {
+	return db.Save(u).Error
 }

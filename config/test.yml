@@ -3,6 +3,7 @@ server:
 datastore:
   driver: "postgres"
   address: "postgresql://kaviraj:kaviraj@localhost/bs_test?connect_timeout=10&sslmode=disable"
+  migrations-path: "file:///home/kaviraj/src/github.com/kavirajk/bookshop/migrations/"
 redis:
   address: "localhost:6392"
   dbnum: 0

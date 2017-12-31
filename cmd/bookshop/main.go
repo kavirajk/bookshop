@@ -11,7 +11,6 @@ import (
 	"github.com/go-kit/kit/log/level"
 
 	"github.com/kavirajk/bookshop/pkg/auth"
-	"github.com/kavirajk/bookshop/pkg/user"
 	"github.com/kavirajk/bookshop/resource/config"
 	"github.com/kavirajk/bookshop/resource/db"
 )
@@ -37,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbr, err := db.New(cfg.Datastore, logger)
+	db, err := db.New(cfg.Datastore, logger)
 	if err != nil {
 		logger.Log("error", err)
 	}
@@ -56,10 +55,7 @@ func main() {
 
 	tokenSvc := auth.NewTokenService("bs", privKey, pubKey, 24*10*time.Hour, logger)
 
-	authSvc := auth.NewService(logger, tokenSvc, dbr.DB)
-
-	// TODO(kaviraj): Remove once schema migrate is in place.
-	dbr.DB.AutoMigrate(&user.User{})
+	authSvc := auth.NewService(logger, tokenSvc, db)
 
 	logger.Log("event", fmt.Sprintf("listening on: %s", cfg.Server.Address))
 

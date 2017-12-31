@@ -20,7 +20,7 @@ type Config struct {
 type Datastore struct {
 	Driver         string `yaml:"driver"`
 	Address        string `yaml:"address"`
-	MigrationsPath string `yaml:"migrationsPath"`
+	MigrationsPath string `yaml:"migrations-path"`
 }
 
 // Server holds server config.
