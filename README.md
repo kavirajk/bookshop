@@ -23,7 +23,8 @@ Bookshop consists of following services
 - [ ] Make services deployable via kubernetes - v7.0
 - [ ] Add service discovery support - v8.0
 - [ ] Monitoring via Prometheus and Grafana - v9.0
-- [ ] Log aggregation via "OK log" - v10.0
+- [ ] Request tracing - v10.0
+- [ ] Log aggregation via "OK log" - v11.0
 
 ### Organization
 
